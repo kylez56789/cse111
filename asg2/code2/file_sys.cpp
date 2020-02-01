@@ -28,6 +28,9 @@ ostream& operator<< (ostream& out, file_type type) {
 // inode_state
 
 inode_state::inode_state() {
+   root = make_shared<inode>(file_type::DIRECTORY_TYPE);
+   cwd = root;
+   
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
 }
@@ -60,9 +63,15 @@ inode::inode(file_type type): inode_nr (next_inode_nr++) {
    switch (type) {
       case file_type::PLAIN_TYPE:
            contents = make_shared<plain_file>();
+           name = "Poo type";
+           file_type PLAIN_TYPE;
+           inode_nr = next_inode_nr;
            break;
       case file_type::DIRECTORY_TYPE:
            contents = make_shared<directory>();
+           name = "D type";
+           file_type DIRECTORY_TYPE;
+           inode_nr = next_inode_nr;
            break;
    }
    DEBUGF ('i', "inode " << inode_nr << ", type = " << type);
@@ -114,7 +123,11 @@ inode_ptr inode::make_file(string){
 }
 
 ostream& operator<< (ostream& out, const inode_ptr& node) {
-   cout << node->name << endl;
+   if (node->type == file_type::DIRECTORY_TYPE){
+      cout << dynamic_pointer_cast<directory>(node->contents);
+   } else {
+      cout << dynamic_pointer_cast<plain_file>(node->contents);
+   }
 }
 
 file_error::file_error (const string& what):
