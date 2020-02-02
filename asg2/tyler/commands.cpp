@@ -129,8 +129,8 @@ void fn_ls (inode_state& state, const wordvec& words){
          cout << dir << endl;
       }
    } else {
-      //inode_ptr current_dir = state.current_dir();
-      cout << state.current_dir() << endl;
+      inode_ptr current_dir = state.current_dir();
+      cout << current_dir << endl;
    }
 }
 
@@ -141,11 +141,32 @@ void fn_lsr (inode_state& state, const wordvec& words){
 void fn_make (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   if (static_cast<int>(words.size()) <= 1) throw command_error("make: too few operands");
+   inode_ptr dir, new_file;
+   wordvec path, check_path, contents;
+   int iter = 2;
+   path = split(words.at(1), "/");
+   check_path = path;
+   check_path.erase(check_path.end());
+   dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
+   for (; iter < static_cast<int>(words.size()); ++iter) {
+      contents.push_back(words[iter]);
+   }
+   new_file = dir->make_file(path.back(), contents);
 }
 
 void fn_mkdir (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   if (static_cast<int>(words.size()) <= 1) throw command_error("make: too few operands");
+   if (static_cast<int>(words.size()) > 2) throw command_error("make: too many operands");
+   inode_ptr dir, new_file;
+   wordvec path, check_path, contents;
+   path = split(words.at(1), "/");
+   check_path = path;
+   check_path.erase(check_path.end());
+   dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
+   new_file = dir->make_dir(path.back(), dir);
 }
 
 void fn_prompt (inode_state& state, const wordvec& words){
@@ -163,8 +184,8 @@ void fn_prompt (inode_state& state, const wordvec& words){
 void fn_pwd (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   int iter = 0;
    wordvec path;
+   int iter = 0;
    inode_ptr currentdir = state.current_dir();
    while (currentdir != state.get_root()) {
       path.push_back(currentdir->get_name());
@@ -181,10 +202,25 @@ void fn_pwd (inode_state& state, const wordvec& words){
 void fn_rm (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   if (static_cast<int>(words.size()) < 2) throw command_error("make: too few operands");
+   inode_ptr dir, new_file;
+   wordvec path, check_path, contents;
+   path = split(words.at(1), "/");
+   check_path = path;
+   check_path.erase(check_path.end());
+   dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
+   dir->remove(path.back());
 }
 
 void fn_rmr (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   inode_ptr dir, new_file;
+   wordvec path, check_path, contents;
+   path = split(words.at(1), "/");
+   check_path = path;
+   check_path.erase(check_path.end());
+   dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
+   dir->rremove(path.back());
 }
 
