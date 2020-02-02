@@ -68,13 +68,32 @@ inode::inode(file_type f_type): inode_nr (next_inode_nr++) {
    switch (type) {
       case file_type::PLAIN_TYPE:
            contents = make_shared<plain_file>();
-           name = "Poo type";
+           name = "Plain Name";
            type = file_type::PLAIN_TYPE;
            inode_nr = next_inode_nr;
            break;
       case file_type::DIRECTORY_TYPE:
            contents = make_shared<directory>();
-           name = "D type";
+           name = "Directory Name";
+           type = file_type::DIRECTORY_TYPE;
+           inode_nr = next_inode_nr;
+           break;
+   }
+   DEBUGF ('i', "inode " << inode_nr << ", type = " << type);
+}
+
+inode::inode(file_type f_type, string new_name): inode_nr (next_inode_nr++) {
+   type = f_type;
+   switch (type) {
+      case file_type::PLAIN_TYPE:
+           contents = make_shared<plain_file>();
+           name = new_name;
+           type = file_type::PLAIN_TYPE;
+           inode_nr = next_inode_nr;
+           break;
+      case file_type::DIRECTORY_TYPE:
+           contents = make_shared<directory>();
+           name = new_name;
            type = file_type::DIRECTORY_TYPE;
            inode_nr = next_inode_nr;
            break;
@@ -119,19 +138,29 @@ wordvec inode::get_names() {
    return dynamic_pointer_cast<directory>(contents)->get_content_names();
 }
 
-inode_ptr inode::make_dir(string){
-
-}
-
-inode_ptr inode::make_file(string){
-
-}
-
-ostream& operator<< (ostream& out, const inode_ptr& node) {
-   //cout << node->type << endl;
-   //cout << "HELLOOOOOOOOOOOO" << endl;
-   //cout << node->get_name();
+inode_ptr inode::make_dir(string dir_name, inode_ptr& parent){
+   inode_ptr new_ptr = make_shared<inode>(file_type::DIRECTORY_TYPE);
+   directory_ptr new_direc = dynamic_pointer_cast<directory>(new_ptr->contents);
+   new_direc->set_dir(".",new_ptr);
+   new_direc->set_dir("..",parent); 
    
+   directory_ptr cwd_direc = dynamic_pointer_cast<directory>(contents);
+   cwd_direc->set_dir(dir_name, new_ptr);    
+   return new_ptr;
+}
+
+inode_ptr inode::make_file(string file_name, wordvec& words){
+   inode_ptr new_ptr = make_shared<inode>(file_type::PLAIN_TYPE);
+   plain_file_ptr pf_ptr = dynamic_pointer_cast<plain_file>(new_ptr->contents); 
+   pf_ptr->writefile(words);
+
+   directory_ptr direc = dynamic_pointer_cast<directory>(contents);
+   direc->set_dir(file_name, new_ptr);
+   return new_ptr;
+}
+
+
+ostream& operator<< (ostream& out, const inode_ptr& node) { 
    if (node->type == file_type::DIRECTORY_TYPE){
       cout << *(dynamic_pointer_cast<directory>(node->contents));
       return out;
@@ -225,18 +254,9 @@ void directory::set_dir (string name, inode_ptr dir) {
       dirents.erase(it);
    }
    cout << "Before insert" << endl;
-   //dirents.insert(it, pair<string,inode_ptr>(name, dir));
+   //dirents.insert(it, pair<string,inode_ptr>(name,dir));
    dirents.insert(pair<string,inode_ptr>(name,dir));
    cout << "After insert" << endl;
-   //cout << dirents.at(name) << endl;
-   /*
-   map<string,inode_ptr>::iterator iter = dirents.find(name);
-   if (iter != dirents.end()) {
-      cout << iter->first << " => " << iter->second << endl;
-      cout << iter->first << " => " << "Poo" << endl;
-   }
-   */
-   //cout << "Poooooo" << endl;
 }
 
 map<string,inode_ptr> directory::get_dirents() {
@@ -271,16 +291,10 @@ wordvec directory::get_content_names() {
 
 ostream& operator<< (ostream& out, directory& dir) {
    cout << "In operator << for directories" << endl;
-   //cout << dir.size() << endl;
-   //cout << dir.get_dirents["."] << endl;
-   //for (auto const& pair: dir.get_dirents()) {
-   //   cout << "{" << pair.first << ": " << pair.second << endl;
-   //}
    
    for(auto iterator = dir.get_dirents().cbegin(); iterator != dir.get_dirents().cend(); ++iterator) {
       cout << (*iterator).second->get_inode_nr() << "  " << (*iterator).second->size();
       cout << "  " << (*iterator).first << endl;
-      //cout << "{" << (*iterator).first << ": "<< (*iterator).second->get_name() << "}\n";
    }
    
    cout << "Now leaving operator << for directors" << endl;

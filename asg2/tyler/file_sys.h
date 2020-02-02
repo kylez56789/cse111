@@ -23,6 +23,7 @@ class directory;
 using inode_ptr = shared_ptr<inode>;
 using base_file_ptr = shared_ptr<base_file>;
 using directory_ptr = shared_ptr<directory>;
+using plain_file_ptr = shared_ptr<plain_file>;
 ostream& operator<< (ostream&, file_type);
 
 
@@ -74,6 +75,7 @@ class inode {
       string name;
    public:
       inode (file_type);
+      inode (file_type, string);
       int size();
       int get_inode_nr() const;
       string get_name();
@@ -81,8 +83,8 @@ class inode {
       inode_ptr get_parent();
       inode_ptr get_child(string name);
       wordvec get_names();
-      inode_ptr make_dir(string);
-      inode_ptr make_file(string);
+      inode_ptr make_dir(string, inode_ptr&);
+      inode_ptr make_file(string, wordvec&);
       file_type get_type();
 };
 
