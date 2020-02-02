@@ -98,6 +98,7 @@ class file_error: public runtime_error {
 };
 
 class base_file {
+   friend ostream& operator<< (ostream& out, const base_file_ptr&);
    protected:
       base_file() = default;
       virtual const string error_file_type() const = 0;
@@ -123,6 +124,7 @@ class base_file {
 //    Replaces the contents of a file with new contents.
 
 class plain_file: public base_file {
+   friend ostream& operator<< (ostream& out, const plain_file&);
    private:
       wordvec data;
       virtual const string error_file_type() const override {
@@ -155,6 +157,7 @@ class plain_file: public base_file {
 //    a dirent with that name exists.
 
 class directory: public base_file {
+   friend ostream& operator<< (ostream& out, directory&);
    private:
       // Must be a map, not unordered_map, so printing is lexicographic
       map<string,inode_ptr> dirents;
@@ -171,6 +174,7 @@ class directory: public base_file {
       void set_dir (string name, inode_ptr dir);
       wordvec get_content_names();
       inode_ptr get_dir(string str);
+      map<string,inode_ptr> get_dirents();
 };
 
 #endif

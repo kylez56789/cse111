@@ -28,6 +28,13 @@ ostream& operator<< (ostream& out, file_type type) {
 // inode_state
 
 inode_state::inode_state() {
+   root = make_shared<inode>(file_type::DIRECTORY_TYPE);
+   cwd = root;
+   directory_ptr direc = dynamic_pointer_cast<directory>(root->contents);
+   direc->set_dir(".",root);
+   direc->set_dir("..",root);
+   //cout << direc->get_dirents().size() << endl;
+   //cout << *direc;
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
 }
@@ -56,13 +63,20 @@ ostream& operator<< (ostream& out, const inode_state& state) {
    return out;
 }
 
-inode::inode(file_type type): inode_nr (next_inode_nr++) {
+inode::inode(file_type f_type): inode_nr (next_inode_nr++) {
+   type = f_type;
    switch (type) {
       case file_type::PLAIN_TYPE:
            contents = make_shared<plain_file>();
+           name = "Poo type";
+           type = file_type::PLAIN_TYPE;
+           inode_nr = next_inode_nr;
            break;
       case file_type::DIRECTORY_TYPE:
            contents = make_shared<directory>();
+           name = "D type";
+           type = file_type::DIRECTORY_TYPE;
+           inode_nr = next_inode_nr;
            break;
    }
    DEBUGF ('i', "inode " << inode_nr << ", type = " << type);
@@ -114,7 +128,21 @@ inode_ptr inode::make_file(string){
 }
 
 ostream& operator<< (ostream& out, const inode_ptr& node) {
-   cout << node->name << endl;
+   //cout << node->type << endl;
+   //cout << "HELLOOOOOOOOOOOO" << endl;
+   //cout << node->get_name();
+   
+   if (node->type == file_type::DIRECTORY_TYPE){
+      cout << *(dynamic_pointer_cast<directory>(node->contents));
+      return out;
+   } else{
+      cout << *(dynamic_pointer_cast<plain_file>(node->contents));
+      return out;
+   }
+}
+
+ostream& operator<< (ostream& out, const base_file_ptr& node) {
+   cout << "<< BASE_FILE" << endl;
 }
 
 file_error::file_error (const string& what):
@@ -154,13 +182,23 @@ size_t plain_file::size() const {
    DEBUGF ('i', "size = " << size);
    return size;
 }
-
 const wordvec& plain_file::readfile() const {
    DEBUGF ('i', data);
    return data;
 }
 
+ostream& operator<< (ostream& out, const plain_file& plain) {
+   for(int iter = 0; iter < static_cast<int>(plain.data.size());iter++) {
+      cout << plain.data.at(iter) << " ";
+   }
+   //cout <<"HELLLOOOO"<<endl;
+   cout << endl;
+   return out;
+}
+
 void plain_file::writefile (const wordvec& words) {
+   //Works based on ubigint testing
+   data = words; 
    DEBUGF ('i', words);
 }
 
@@ -186,7 +224,23 @@ void directory::set_dir (string name, inode_ptr dir) {
    if (it != dirents.end()){
       dirents.erase(it);
    }
-   dirents.insert(it, pair<string,inode_ptr>(name, dir));
+   cout << "Before insert" << endl;
+   //dirents.insert(it, pair<string,inode_ptr>(name, dir));
+   dirents.insert(pair<string,inode_ptr>(name,dir));
+   cout << "After insert" << endl;
+   //cout << dirents.at(name) << endl;
+   /*
+   map<string,inode_ptr>::iterator iter = dirents.find(name);
+   if (iter != dirents.end()) {
+      cout << iter->first << " => " << iter->second << endl;
+      cout << iter->first << " => " << "Poo" << endl;
+   }
+   */
+   //cout << "Poooooo" << endl;
+}
+
+map<string,inode_ptr> directory::get_dirents() {
+   return dirents;
 }
 
 inode_ptr directory::get_dir (string name) {
@@ -214,3 +268,23 @@ wordvec directory::get_content_names() {
    }
    return names;
 }
+
+ostream& operator<< (ostream& out, directory& dir) {
+   cout << "In operator << for directories" << endl;
+   //cout << dir.size() << endl;
+   //cout << dir.get_dirents["."] << endl;
+   //for (auto const& pair: dir.get_dirents()) {
+   //   cout << "{" << pair.first << ": " << pair.second << endl;
+   //}
+   
+   for(auto iterator = dir.get_dirents().cbegin(); iterator != dir.get_dirents().cend(); ++iterator) {
+      cout << (*iterator).second->get_inode_nr() << "  " << (*iterator).second->size();
+      cout << "  " << (*iterator).first << endl;
+      //cout << "{" << (*iterator).first << ": "<< (*iterator).second->get_name() << "}\n";
+   }
+   
+   cout << "Now leaving operator << for directors" << endl;
+   return out;
+
+}
+

@@ -129,8 +129,8 @@ void fn_ls (inode_state& state, const wordvec& words){
          cout << dir << endl;
       }
    } else {
-      inode_ptr current_dir = state.current_dir();
-      cout << current_dir << endl;
+      //inode_ptr current_dir = state.current_dir();
+      cout << state.current_dir() << endl;
    }
 }
 
