@@ -97,7 +97,7 @@ void inode_state::set_root(inode_ptr new_root){
 void inode::set_parent(inode_ptr parent){
    dynamic_pointer_cast<directory>(contents)->set_dir("..", parent);
 }
-
+14
 int inode::size() {
    return contents->size();
 }
