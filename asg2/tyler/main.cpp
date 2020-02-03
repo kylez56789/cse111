@@ -65,11 +65,14 @@ int main (int argc, char** argv) {
             if (need_echo) cout << line << endl;
             // Split the line into words and lookup the appropriate
             // function.  Complain or call it.
-            wordvec words = split (line, " \t");
-            DEBUGF ('y', "words = " << words);
-            command_fn fn = find_command_fn (words.at(0));
-            fn (state, words);
-            
+            char pound = '#';
+            char first_char = line.at(0);
+            if(first_char != pound) {
+               wordvec words = split (line, " \t");
+               DEBUGF ('y', "words = " << words);
+               command_fn fn = find_command_fn (words.at(0));
+               fn (state, words);
+            }
          }catch (command_error& error) {
             // If there is a problem discovered in any function, an
             // exn is thrown and printed here.

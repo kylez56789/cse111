@@ -15,6 +15,7 @@ command_hash cmd_hash {
    {"prompt", fn_prompt},
    {"pwd"   , fn_pwd   },
    {"rm"    , fn_rm    },
+   {"rmr"   , fn_rmr   },
 };
 
 command_fn find_command_fn (const string& cmd) {
@@ -41,15 +42,21 @@ inode_ptr checkpath(inode_state &state, wordvec path, bool fromroot) {
    } else {
       checkedpath = state.current_dir();
    }
+   //cout << "Passed initial conditions in checkpath\n";
    for (iter = 0; iter < static_cast<int>(path.size()); iter++){
       try {
+         //cout << "Just got in the for loop\n";
          checkedpath = checkedpath->get_child(path[iter]);
+         //cout << "Inside the for loop\n";
       }
       catch (...) {
          throw command_error ("path does not exist");
       }
-      checkedpath = checkedpath->get_child(path[iter]);
+      //cout << "Outside try catch\n";
+      //checkedpath = checkedpath->get_child(path[iter]);
+      //cout << "Passed a thing\n";
    }
+   //cout << "Right before return\n";
    return checkedpath;
 }
 
@@ -69,7 +76,7 @@ void fn_cat (inode_state& state, const wordvec& words){
    // find path
    for (iter = 1; iter < static_cast<int>(words.size()); iter++) {
       wordvec path = split(words[iter], "/");
-      dir = checkpath(state, path, ((words.at(1)).at(0) == '/'));
+      dir = checkpath(state, path, (words[1][0] == '/'));
       if (dir->get_type() == file_type::PLAIN_TYPE) {
          cout << dir << endl;
       } else throw command_error ("cat: can't cat a directory!");
@@ -129,8 +136,8 @@ void fn_ls (inode_state& state, const wordvec& words){
          cout << dir << endl;
       }
    } else {
-      inode_ptr current_dir = state.current_dir();
-      cout << current_dir << endl;
+      //inode_ptr current_dir = state.current_dir();
+      cout << state.current_dir() << endl;
    }
 }
 
@@ -152,7 +159,7 @@ void fn_make (inode_state& state, const wordvec& words){
    for (; iter < static_cast<int>(words.size()); ++iter) {
       contents.push_back(words[iter]);
    }
-   new_file = dir->make_file(path.back(), contents);
+   dir->make_file(path.back(), contents);
 }
 
 void fn_mkdir (inode_state& state, const wordvec& words){
@@ -166,7 +173,7 @@ void fn_mkdir (inode_state& state, const wordvec& words){
    check_path = path;
    check_path.erase(check_path.end());
    dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
-   new_file = dir->make_dir(path.back(), dir);
+   dir->make_dir(path.back(), dir);
 }
 
 void fn_prompt (inode_state& state, const wordvec& words){
