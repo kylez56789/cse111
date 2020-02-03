@@ -42,22 +42,37 @@ inode_ptr checkpath(inode_state &state, wordvec path, bool fromroot) {
    } else {
       checkedpath = state.current_dir();
    }
-   //cout << "Passed initial conditions in checkpath\n";
    for (iter = 0; iter < static_cast<int>(path.size()); iter++){
       try {
-         //cout << "Just got in the for loop\n";
          checkedpath = checkedpath->get_child(path[iter]);
-         //cout << "Inside the for loop\n";
       }
       catch (...) {
          throw command_error ("path does not exist");
       }
-      //cout << "Outside try catch\n";
-      //checkedpath = checkedpath->get_child(path[iter]);
-      //cout << "Passed a thing\n";
    }
-   //cout << "Right before return\n";
    return checkedpath;
+}
+
+void rremove(inode_ptr node) {
+   if (node -> get_type() == file_type::DIRECTORY_TYPE) {
+      wordvec children = node -> get_child_names();
+      for (int iter = 2; iter < children.size(); iter++) {
+         inode_ptr kid = node->get_child(children.at(i));
+         rremove(kid);
+      }
+   }
+   node->get_parent()->remove(node->get_name());
+}
+
+void rprint(inode_ptr inode) {
+   cout << *inode << endl;
+   wordvec children = inode -> get_child_names();
+   for (int iter = 2; iter < children.size(); iter++) {
+      inode_ptr child = inode -> get_child(children.at(i));
+      if (child -> get_file_type() == file_type::DIRECTORY_TYPE) {
+         rprint(child);
+      }
+   }
 }
 
 int exit_status_message() {
@@ -76,7 +91,7 @@ void fn_cat (inode_state& state, const wordvec& words){
    // find path
    for (iter = 1; iter < static_cast<int>(words.size()); iter++) {
       wordvec path = split(words[iter], "/");
-      dir = checkpath(state, path, (words[1][0] == '/'));
+      dir = checkpath(state, path, (words.at(1)).at(0) == '/'));
       if (dir->get_type() == file_type::PLAIN_TYPE) {
          cout << dir << endl;
       } else throw command_error ("cat: can't cat a directory!");
@@ -116,6 +131,19 @@ void fn_echo (inode_state& state, const wordvec& words){
 void fn_exit (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   int status = 0;
+   if (words.size() > 1) {
+      string exitnum = words.at(1);
+      for (uint i = 0; i < exitstate.size(); i++) {
+         if (exitnum.at(i) < '0' or exitnum.at(i) > '9') {
+            status = 127;
+            break;
+         }
+      }
+      if (status != 127) status = stoi(exitArg);
+   }
+   exit_status::set(status);
+   rremove(state.get_root());
    throw ysh_exit();
 }
 
@@ -142,7 +170,20 @@ void fn_ls (inode_state& state, const wordvec& words){
 }
 
 void fn_lsr (inode_state& state, const wordvec& words){
-   
+   if (words.size() >= 2) {
+      for (uint i = 1; i < words.size(); i++) {
+         wordvec file_path = split(words.at(i), "/");
+         inode_ptr destination_dir = checkpath(state,
+                                           file_path,
+                                           (words.at(i).at(0) == '/'));
+         rprint(destination_dir);
+      }
+   }
+   // Otherwise, show the contents of the current location
+   else {
+      inode_ptr currentDir = state.current_dir();
+      rprint(currentDir);
+   }
 }
 
 void fn_make (inode_state& state, const wordvec& words){

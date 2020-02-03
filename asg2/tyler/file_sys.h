@@ -86,6 +86,7 @@ class inode {
       void make_dir(string, inode_ptr&);
       void make_file(string, wordvec&);
       file_type get_type();
+      wordvec get_child_names();
       void remove(string);
       void rremove(string);
 };
