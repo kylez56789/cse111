@@ -33,16 +33,6 @@ inode_state::inode_state() {
    directory_ptr direc = dynamic_pointer_cast<directory>(root->contents);
    direc->set_dir(".",root);
    direc->set_dir("..",root);
-   direc->set_dir("...",root);
-   direc->set_dir("....",root);
-   direc->set_dir(".....",root);
-   direc->set_dir("......",root);
-   direc->set_dir("a",root);
-   direc->set_dir("b.",root);
-   direc->set_dir("c..",root);
-   direc->set_dir("d...",root);
-   direc->set_dir("e....",root);
-   direc->set_dir("f.....",root);
    cout << direc->get_dirents().size() << endl;
    //cout << *direc;
    cout << *direc << endl;
@@ -76,6 +66,7 @@ ostream& operator<< (ostream& out, const inode_state& state) {
 
 inode::inode(file_type f_type): inode_nr (next_inode_nr++) {
    type = f_type;
+   cout << f_type << endl;
    switch (type) {
       case file_type::PLAIN_TYPE:
            contents = make_shared<plain_file>();
@@ -348,6 +339,23 @@ wordvec directory::get_content_names() {
 ostream& operator<< (ostream& out, directory& dir) {
    cout << "In operator << for directories" << endl;
    cout << "Dir size = " << dir.size() << endl;
+   wordvec names = dir.get_content_names();
+   /*
+   for (int a = 0; a < names.size() ;a++) {
+      cout << names[a] << " ";
+   }
+   */
+   //cout << dir.get_dirents()[".."];
+   map<string,inode_ptr>::iterator iter;
+   for(int a = 0; a < names.size(); a++) {
+      iter = dir.get_dirents().find(names[a]);
+      //cout << iter->second->get_inode_nr() << endl;
+      //cout << iter->second;//->size();
+      cout << iter->first << endl;
+      //cout << (iter->second);
+      //cout << iter->second->get_inode_nr() << "  " << iter->second->size();
+      //cout << "  " << iter->first << endl;
+   }
    /*
    map<string,inode_ptr>::iterator iter;
    for(iter = dir.get_dirents().begin(); iter != dir.get_dirents().end(); iter++) {
@@ -362,11 +370,12 @@ ostream& operator<< (ostream& out, directory& dir) {
       cout << dirents2.at(names[iter]);
    }
    */
+   /*
    for(auto iterator = dir.get_dirents().cbegin(); iterator != dir.get_dirents().cend(); ++iterator) {
-      cout << (*iterator).second->get_inode_nr() << "  " << (*iterator).second->size();
-      cout << "  " << (*iterator).first << endl;
+      cout << iterator->second->get_inode_nr() << "  " << iterator->second->size();
+      cout << "  " << iterator->first << endl;
    }
-   
+   */
    
    cout << "Now leaving operator << for directories" << endl;
    return out;
