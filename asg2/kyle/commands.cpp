@@ -15,6 +15,7 @@ command_hash cmd_hash {
    {"prompt", fn_prompt},
    {"pwd"   , fn_pwd   },
    {"rm"    , fn_rm    },
+   {"rmr"   , fn_rmr   },
 };
 
 command_fn find_command_fn (const string& cmd) {
@@ -41,15 +42,21 @@ inode_ptr checkpath(inode_state &state, wordvec path, bool fromroot) {
    } else {
       checkedpath = state.current_dir();
    }
+   cout << "Passed initial conditions in checkpath\n";
    for (iter = 0; iter < static_cast<int>(path.size()); iter++){
       try {
+         cout << "Just got in the for loop\n";
          checkedpath = checkedpath->get_child(path[iter]);
+         cout << "Inside the for loop\n";
       }
       catch (...) {
          throw command_error ("path does not exist");
       }
+      cout << "Outside try catch\n";
       checkedpath = checkedpath->get_child(path[iter]);
+      cout << "Passed a thing\n";
    }
+   cout << "Right before return\n";
    return checkedpath;
 }
 
@@ -162,12 +169,11 @@ void fn_mkdir (inode_state& state, const wordvec& words){
    if (static_cast<int>(words.size()) > 2) throw command_error("make: too many operands");
    inode_ptr dir, new_file;
    wordvec path, check_path, contents;
-   int iter = 2;
    path = split(words.at(1), "/");
    check_path = path;
    check_path.erase(check_path.end());
    dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
-   new_file = dir->make_dir(path.back());
+   new_file = dir->make_dir(path.back(), dir);
 }
 
 void fn_prompt (inode_state& state, const wordvec& words){
@@ -186,6 +192,7 @@ void fn_pwd (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
    wordvec path;
+   int iter = 0;
    inode_ptr currentdir = state.current_dir();
    while (currentdir != state.get_root()) {
       path.push_back(currentdir->get_name());
@@ -215,12 +222,12 @@ void fn_rm (inode_state& state, const wordvec& words){
 void fn_rmr (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   inode _ptr dir, new_file;
+   inode_ptr dir, new_file;
    wordvec path, check_path, contents;
    path = split(words.at(1), "/");
    check_path = path;
    check_path.erase(check_path.end());
    dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
-   rremove(path.back());
+   dir->rremove(path.back());
 }
 

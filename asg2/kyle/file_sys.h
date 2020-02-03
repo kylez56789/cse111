@@ -23,6 +23,7 @@ class directory;
 using inode_ptr = shared_ptr<inode>;
 using base_file_ptr = shared_ptr<base_file>;
 using directory_ptr = shared_ptr<directory>;
+using plain_file_ptr = shared_ptr<plain_file>;
 ostream& operator<< (ostream&, file_type);
 
 
@@ -74,6 +75,7 @@ class inode {
       string name;
    public:
       inode (file_type);
+      inode (file_type, string);
       int size();
       int get_inode_nr() const;
       string get_name();
@@ -81,9 +83,11 @@ class inode {
       inode_ptr get_parent();
       inode_ptr get_child(string name);
       wordvec get_names();
-      inode_ptr make_dir(string);
-      inode_ptr make_file(string);
+      inode_ptr make_dir(string, inode_ptr&);
+      inode_ptr make_file(string, wordvec&);
       file_type get_type();
+      void remove(string);
+      void rremove(string);
 };
 
 
@@ -98,6 +102,7 @@ class file_error: public runtime_error {
 };
 
 class base_file {
+   friend ostream& operator<< (ostream& out, const base_file_ptr&);
    protected:
       base_file() = default;
       virtual const string error_file_type() const = 0;
@@ -123,6 +128,7 @@ class base_file {
 //    Replaces the contents of a file with new contents.
 
 class plain_file: public base_file {
+   friend ostream& operator<< (ostream& out, const plain_file&);
    private:
       wordvec data;
       virtual const string error_file_type() const override {
@@ -155,6 +161,7 @@ class plain_file: public base_file {
 //    a dirent with that name exists.
 
 class directory: public base_file {
+   friend ostream& operator<< (ostream& out, directory&);
    private:
       // Must be a map, not unordered_map, so printing is lexicographic
       map<string,inode_ptr> dirents;
@@ -171,6 +178,7 @@ class directory: public base_file {
       void set_dir (string name, inode_ptr dir);
       wordvec get_content_names();
       inode_ptr get_dir(string str);
+      map<string,inode_ptr> get_dirents();
 };
 
 #endif
