@@ -33,8 +33,19 @@ inode_state::inode_state() {
    directory_ptr direc = dynamic_pointer_cast<directory>(root->contents);
    direc->set_dir(".",root);
    direc->set_dir("..",root);
-   //cout << direc->get_dirents().size() << endl;
+   direc->set_dir("...",root);
+   direc->set_dir("....",root);
+   direc->set_dir(".....",root);
+   direc->set_dir("......",root);
+   direc->set_dir("a",root);
+   direc->set_dir("b.",root);
+   direc->set_dir("c..",root);
+   direc->set_dir("d...",root);
+   direc->set_dir("e....",root);
+   direc->set_dir("f.....",root);
+   cout << direc->get_dirents().size() << endl;
    //cout << *direc;
+   cout << *direc << endl;
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
 }
@@ -138,7 +149,7 @@ wordvec inode::get_names() {
    return dynamic_pointer_cast<directory>(contents)->get_content_names();
 }
 
-inode_ptr inode::make_dir(string dir_name, inode_ptr& parent){
+void inode::make_dir(string dir_name, inode_ptr& parent){
    //Makes new inode_ptr that points to a directory with 2 base inputs
    inode_ptr new_ptr = make_shared<inode>(file_type::DIRECTORY_TYPE);
    directory_ptr new_direc = dynamic_pointer_cast<directory>(new_ptr->contents);
@@ -147,17 +158,17 @@ inode_ptr inode::make_dir(string dir_name, inode_ptr& parent){
    
    directory_ptr cwd_direc = dynamic_pointer_cast<directory>(this->contents);
    cwd_direc->set_dir(dir_name, new_ptr);    
-   return new_ptr;
 }
 
-inode_ptr inode::make_file(string file_name, wordvec& words){
+void inode::make_file(string file_name, wordvec& words){
    inode_ptr new_ptr = make_shared<inode>(file_type::PLAIN_TYPE);
    plain_file_ptr pf_ptr = dynamic_pointer_cast<plain_file>(new_ptr->contents); 
    pf_ptr->writefile(words);
-
+   
    directory_ptr direc = dynamic_pointer_cast<directory>(contents);
+   //cout << *direc;
    direc->set_dir(file_name, new_ptr);
-   return new_ptr;
+   //cout << *direc;
 }
 
 void inode::remove(string to_be_removed) {
@@ -168,6 +179,10 @@ void inode::remove(string to_be_removed) {
    else {
       throw file_error ("Error cannot remove from a file");
    }
+}
+
+wordvec inode::get_child_names(inode_ptr parent) {
+   return dynamic_pointer_cast<directory>(parent->contents)->get_content_names();
 }
 
 void inode::rremove(string to_be_removed) {
@@ -278,10 +293,12 @@ directory::directory (inode_ptr parent, inode_ptr root) {
    dirents.insert(pair<string, inode_ptr>("..", parent));
 }
 void directory::set_dir (string name, inode_ptr dir) {
+   /*
    map<string,inode_ptr>::iterator it = dirents.find(name);
    if (it != dirents.end()){
       dirents.erase(it);
    }
+   */
    cout << "Before insert" << endl;
    //dirents.insert(it, pair<string,inode_ptr>(name,dir));
    dirents.insert(pair<string,inode_ptr>(name,dir));
@@ -334,13 +351,29 @@ wordvec directory::get_content_names() {
 
 ostream& operator<< (ostream& out, directory& dir) {
    cout << "In operator << for directories" << endl;
-   
+   cout << "Dir size = " << dir.size() << endl;
+   /*
+   map<string,inode_ptr>::iterator iter;
+   for(iter = dir.get_dirents().begin(); iter != dir.get_dirents().end(); iter++) {
+      cout << iter->second->get_inode_nr() << "  " << iter->second->size();
+      cout << "  " << iter->first << endl;
+   }
+   */
+   /*
+   map<string,inode_ptr> dirents2 = dir.get_dirents();
+   wordvec names = dir.get_content_names();
+   for(int iter = 0; iter < names.size(); iter++) {
+      cout << dirents2.at(names[iter]);
+   }
+   */
+  /*
    for(auto iterator = dir.get_dirents().cbegin(); iterator != dir.get_dirents().cend(); ++iterator) {
       cout << (*iterator).second->get_inode_nr() << "  " << (*iterator).second->size();
       cout << "  " << (*iterator).first << endl;
    }
+   */
    
-   cout << "Now leaving operator << for directors" << endl;
+   cout << "Now leaving operator << for directories" << endl;
    return out;
 
 }

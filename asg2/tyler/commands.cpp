@@ -78,9 +78,10 @@ void fn_cat (inode_state& state, const wordvec& words){
       wordvec path = split(words[iter], "/");
       dir = checkpath(state, path, (words[1][0] == '/'));
       if (dir->get_type() == file_type::PLAIN_TYPE) {
-         cout << dir << endl;
+         cout << dir;
       } else throw command_error ("cat: can't cat a directory!");
    }
+   
 }
 
 void fn_cd (inode_state& state, const wordvec& words){
@@ -125,6 +126,8 @@ void fn_ls (inode_state& state, const wordvec& words){
    inode_ptr dir;
    wordvec path;
    int iter = 1;
+   fn_ls_pwd(state,words);
+   cout << ":"<< endl;
    // check to see if too few arguments
    if (static_cast<int>(words.size()) > 2) throw command_error("cd: too many operands");
    // check whether path was given
@@ -203,6 +206,27 @@ void fn_pwd (inode_state& state, const wordvec& words){
    }
    if (static_cast<int>(path.size()) == 0) {
       cout << "/" << endl;
+   }
+   else {
+      cout << endl;
+   }
+}
+
+void fn_ls_pwd (inode_state& state, const wordvec& words){
+   DEBUGF ('c', state);
+   DEBUGF ('c', words);
+   wordvec path;
+   int iter = 0;
+   inode_ptr currentdir = state.current_dir();
+   while (currentdir != state.get_root()) {
+      path.push_back(currentdir->get_name());
+      currentdir = currentdir->get_parent();
+   }
+   for (iter = static_cast<int>(path.size()) - 1; iter >= 0; iter--) {
+      cout << "/" << path.at(iter);
+   }
+   if (static_cast<int>(path.size()) == 0) {
+      cout << "/";
    }
 }
 

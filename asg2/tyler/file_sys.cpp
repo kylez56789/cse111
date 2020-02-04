@@ -71,13 +71,13 @@ inode::inode(file_type f_type): inode_nr (next_inode_nr++) {
            contents = make_shared<plain_file>();
            name = "Plain Name";
            type = file_type::PLAIN_TYPE;
-           inode_nr = next_inode_nr;
+           inode_nr = next_inode_nr - 1;
            break;
       case file_type::DIRECTORY_TYPE:
            contents = make_shared<directory>();
            name = "Directory Name";
            type = file_type::DIRECTORY_TYPE;
-           inode_nr = next_inode_nr;
+           inode_nr = next_inode_nr - 1;
            break;
    }
    DEBUGF ('i', "inode " << inode_nr << ", type = " << type);
@@ -90,13 +90,13 @@ inode::inode(file_type f_type, string new_name): inode_nr (next_inode_nr++) {
            contents = make_shared<plain_file>();
            name = new_name;
            type = file_type::PLAIN_TYPE;
-           inode_nr = next_inode_nr;
+           inode_nr = next_inode_nr - 1;
            break;
       case file_type::DIRECTORY_TYPE:
            contents = make_shared<directory>();
            name = new_name;
            type = file_type::DIRECTORY_TYPE;
-           inode_nr = next_inode_nr;
+           inode_nr = next_inode_nr - 1;
            break;
    }
    DEBUGF ('i', "inode " << inode_nr << ", type = " << type);
@@ -141,7 +141,7 @@ wordvec inode::get_names() {
 
 void inode::make_dir(string dir_name, inode_ptr& parent){
    //Makes new inode_ptr that points to a directory with 2 base inputs
-   inode_ptr new_ptr = make_shared<inode>(file_type::DIRECTORY_TYPE);
+   inode_ptr new_ptr = make_shared<inode>(file_type::DIRECTORY_TYPE, dir_name);
    directory_ptr new_direc = dynamic_pointer_cast<directory>(new_ptr->contents);
    new_direc->set_dir(".",new_ptr);
    new_direc->set_dir("..",parent); 
@@ -151,7 +151,7 @@ void inode::make_dir(string dir_name, inode_ptr& parent){
 }
 
 void inode::make_file(string file_name, wordvec& words){
-   inode_ptr new_ptr = make_shared<inode>(file_type::PLAIN_TYPE);
+   inode_ptr new_ptr = make_shared<inode>(file_type::PLAIN_TYPE, file_name);
    plain_file_ptr pf_ptr = dynamic_pointer_cast<plain_file>(new_ptr->contents); 
    pf_ptr->writefile(words);
    
@@ -238,7 +238,7 @@ size_t plain_file::size() const {
    for(iter = 0; iter < static_cast<int>(data.size()); iter++) {
       size += data[iter].length();
    }
-   size += data.size();
+   size += (data.size() - 1);
    DEBUGF ('i', "size = " << size);
    return size;
 }
@@ -336,44 +336,23 @@ wordvec directory::get_content_names() {
 }
 
 ostream& operator<< (ostream& out, directory& dir) {
-   cout << "In operator << for directories" << endl;
-   cout << "Dir size = " << dir.size() << endl;
+   //cout << "In operator << for directories" << endl;
+   //cout << "Dir size = " << dir.size() << endl;
    wordvec names = dir.get_content_names();
-   /*
-   for (int a = 0; a < names.size() ;a++) {
-      cout << names[a] << " ";
-   }
-   */
-   //cout << dir.get_dirents()[".."];
    map<string,inode_ptr>::iterator iter;
    for(int a = 0; a < names.size(); a++) {
       iter = dir.get_dirents().find(names[a]);
       cout << iter->second->get_inode_nr() << "  ";
       cout << iter->second->size() << "  ";
-      cout << iter->first << endl;
+      cout << iter->first;
+      if(iter->second->get_type() == file_type::DIRECTORY_TYPE) {
+         cout << "/" << endl;
+      }
+      else {
+         cout << endl;
+      }
    }
-   /*
-   map<string,inode_ptr>::iterator iter;
-   for(iter = dir.get_dirents().begin(); iter != dir.get_dirents().end(); iter++) {
-      cout << iter->second->get_inode_nr() << "  " << iter->second->size();
-      cout << "  " << iter->first << endl;
-   }
-   */
-   /*
-   map<string,inode_ptr> dirents2 = dir.get_dirents();
-   wordvec names = dir.get_content_names();
-   for(int iter = 0; iter < names.size(); iter++) {
-      cout << dirents2.at(names[iter]);
-   }
-   */
-   /*
-   for(auto iterator = dir.get_dirents().cbegin(); iterator != dir.get_dirents().cend(); ++iterator) {
-      cout << iterator->second->get_inode_nr() << "  " << iterator->second->size();
-      cout << "  " << iterator->first << endl;
-   }
-   */
-   
-   cout << "Now leaving operator << for directories" << endl;
+   //cout << "Now leaving operator << for directories" << endl;
    return out;
 
 }
