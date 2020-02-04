@@ -33,9 +33,9 @@ inode_state::inode_state() {
    directory_ptr direc = dynamic_pointer_cast<directory>(root->contents);
    direc->set_dir(".",root);
    direc->set_dir("..",root);
-   cout << direc->get_dirents().size() << endl;
+   //cout << direc->get_dirents().size() << endl;
    //cout << *direc;
-   cout << *direc << endl;
+   //cout << *direc << endl;
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
 }
@@ -66,7 +66,6 @@ ostream& operator<< (ostream& out, const inode_state& state) {
 
 inode::inode(file_type f_type): inode_nr (next_inode_nr++) {
    type = f_type;
-   cout << f_type << endl;
    switch (type) {
       case file_type::PLAIN_TYPE:
            contents = make_shared<plain_file>();
@@ -271,8 +270,8 @@ size_t directory::size() const {
 // updates or inserts directory
 
 directory::directory() {
-   dirents.insert(pair<string, inode_ptr>(".", nullptr));
-   dirents.insert(pair<string, inode_ptr>("..", nullptr));
+   //dirents.insert(pair<string, inode_ptr>(".", nullptr));
+   //dirents.insert(pair<string, inode_ptr>("..", nullptr));
 }
 
 directory::directory (inode_ptr parent, inode_ptr root) {
@@ -286,10 +285,10 @@ void directory::set_dir (string name, inode_ptr dir) {
       dirents.erase(it);
    }
    */
-   cout << "Before insert" << endl;
+   //cout << "Before insert" << endl;
    //dirents.insert(it, pair<string,inode_ptr>(name,dir));
    dirents.insert(pair<string,inode_ptr>(name,dir));
-   cout << "After insert" << endl;
+   //cout << "After insert" << endl;
 }
 
 map<string,inode_ptr> directory::get_dirents() {
@@ -349,12 +348,9 @@ ostream& operator<< (ostream& out, directory& dir) {
    map<string,inode_ptr>::iterator iter;
    for(int a = 0; a < names.size(); a++) {
       iter = dir.get_dirents().find(names[a]);
-      //cout << iter->second->get_inode_nr() << endl;
-      //cout << iter->second;//->size();
+      cout << iter->second->get_inode_nr() << "  ";
+      cout << iter->second->size() << "  ";
       cout << iter->first << endl;
-      //cout << (iter->second);
-      //cout << iter->second->get_inode_nr() << "  " << iter->second->size();
-      //cout << "  " << iter->first << endl;
    }
    /*
    map<string,inode_ptr>::iterator iter;

@@ -198,7 +198,7 @@ void fn_pwd (inode_state& state, const wordvec& words){
       path.push_back(currentdir->get_name());
       currentdir = currentdir->get_parent();
    }
-   for (iter = static_cast<int>(path.size()) - 1; iter >= 0; iter++) {
+   for (iter = static_cast<int>(path.size()) - 1; iter >= 0; iter--) {
       cout << "/" << path.at(iter);
    }
    if (static_cast<int>(path.size()) == 0) {
