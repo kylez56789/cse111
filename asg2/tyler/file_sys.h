@@ -87,7 +87,6 @@ class inode {
       void make_file(string, wordvec&);
       file_type get_type();
       void remove(string);
-      void rremove(string);
 };
 
 

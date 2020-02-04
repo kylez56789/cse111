@@ -252,6 +252,6 @@ void fn_rmr (inode_state& state, const wordvec& words){
    check_path = path;
    check_path.erase(check_path.end());
    dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
-   dir->rremove(path.back());
+   dir->remove(path.back());
 }
 
