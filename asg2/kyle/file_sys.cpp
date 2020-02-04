@@ -1,8 +1,12 @@
 // $Id: file_sys.cpp,v 1.7 2019-07-09 14:05:44-07 - - $
-
+/**
+ * Tyler Tran tystran
+ * Kyle Zhang kmzhang
+ * */
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
+#include <iomanip>
 
 using namespace std;
 
@@ -25,27 +29,13 @@ ostream& operator<< (ostream& out, file_type type) {
    return out << hash[type];
 }
 
-// inode_state
-
 inode_state::inode_state() {
    root = make_shared<inode>(file_type::DIRECTORY_TYPE);
    cwd = root;
-   directory_ptr direc = dynamic_pointer_cast<directory>(root->contents);
+   directory_ptr direc = 
+    dynamic_pointer_cast<directory>(root->contents);
    direc->set_dir(".",root);
    direc->set_dir("..",root);
-   direc->set_dir("...",root);
-   direc->set_dir("....",root);
-   direc->set_dir(".....",root);
-   direc->set_dir("......",root);
-   direc->set_dir("a",root);
-   direc->set_dir("b.",root);
-   direc->set_dir("c..",root);
-   direc->set_dir("d...",root);
-   direc->set_dir("e....",root);
-   direc->set_dir("f.....",root);
-   cout << direc->get_dirents().size() << endl;
-   //cout << *direc;
-   cout << *direc << endl;
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
 }
@@ -79,34 +69,35 @@ inode::inode(file_type f_type): inode_nr (next_inode_nr++) {
    switch (type) {
       case file_type::PLAIN_TYPE:
            contents = make_shared<plain_file>();
-           name = "Plain Name";
            type = file_type::PLAIN_TYPE;
-           inode_nr = next_inode_nr;
+           name = "/";
+           inode_nr = next_inode_nr - 1;
            break;
       case file_type::DIRECTORY_TYPE:
            contents = make_shared<directory>();
-           name = "Directory Name";
            type = file_type::DIRECTORY_TYPE;
-           inode_nr = next_inode_nr;
+           name = "/";
+           inode_nr = next_inode_nr - 1;
            break;
    }
    DEBUGF ('i', "inode " << inode_nr << ", type = " << type);
 }
 
-inode::inode(file_type f_type, string new_name): inode_nr (next_inode_nr++) {
+inode::inode(file_type f_type, 
+ string new_name): inode_nr (next_inode_nr++) {
    type = f_type;
    switch (type) {
       case file_type::PLAIN_TYPE:
            contents = make_shared<plain_file>();
            name = new_name;
            type = file_type::PLAIN_TYPE;
-           inode_nr = next_inode_nr;
+           inode_nr = next_inode_nr - 1;
            break;
       case file_type::DIRECTORY_TYPE:
            contents = make_shared<directory>();
            name = new_name;
            type = file_type::DIRECTORY_TYPE;
-           inode_nr = next_inode_nr;
+           inode_nr = next_inode_nr - 1;
            break;
    }
    DEBUGF ('i', "inode " << inode_nr << ", type = " << type);
@@ -116,7 +107,7 @@ int inode::get_inode_nr() const {
    DEBUGF ('i', "inode = " << inode_nr);
    return inode_nr;
 }
-
+
 file_type inode::get_type() {
    return type;
 }
@@ -133,6 +124,10 @@ void inode::set_parent(inode_ptr parent){
    dynamic_pointer_cast<directory>(contents)->set_dir("..", parent);
 }
 
+wordvec inode::get_child_names(){
+   return dynamic_pointer_cast<directory>
+          (this->contents)->get_content_names();
+}
 int inode::size() {
    return contents->size();
 }
@@ -146,53 +141,39 @@ inode_ptr inode::get_child(string c_name){
 }
 
 wordvec inode::get_names() {
-   return dynamic_pointer_cast<directory>(contents)->get_content_names();
+   directory_ptr dir_ptr = dynamic_pointer_cast<directory>(contents);
+   return dir_ptr->get_content_names();
 }
 
 void inode::make_dir(string dir_name, inode_ptr& parent){
-   //Makes new inode_ptr that points to a directory with 2 base inputs
-   inode_ptr new_ptr = make_shared<inode>(file_type::DIRECTORY_TYPE);
-   directory_ptr new_direc = dynamic_pointer_cast<directory>(new_ptr->contents);
+   inode_ptr new_ptr;
+   new_ptr = make_shared<inode>(file_type::DIRECTORY_TYPE, dir_name);
+   directory_ptr new_direc;
+   new_direc = dynamic_pointer_cast<directory>(new_ptr->contents);
    new_direc->set_dir(".",new_ptr);
    new_direc->set_dir("..",parent); 
    
-   directory_ptr cwd_direc = dynamic_pointer_cast<directory>(this->contents);
+   directory_ptr cwd_direc;
+   cwd_direc = dynamic_pointer_cast<directory>(this->contents);
    cwd_direc->set_dir(dir_name, new_ptr);    
 }
 
 void inode::make_file(string file_name, wordvec& words){
-   inode_ptr new_ptr = make_shared<inode>(file_type::PLAIN_TYPE);
-   plain_file_ptr pf_ptr = dynamic_pointer_cast<plain_file>(new_ptr->contents); 
+   inode_ptr new_ptr;
+   new_ptr = make_shared<inode>(file_type::PLAIN_TYPE, file_name);
+   plain_file_ptr pf_ptr;
+   pf_ptr = dynamic_pointer_cast<plain_file>(new_ptr->contents); 
    pf_ptr->writefile(words);
    
    directory_ptr direc = dynamic_pointer_cast<directory>(contents);
-   //cout << *direc;
    direc->set_dir(file_name, new_ptr);
-   //cout << *direc;
 }
 
 void inode::remove(string to_be_removed) {
    if(this->type == file_type::DIRECTORY_TYPE) {
-      directory_ptr dir_ptr = dynamic_pointer_cast<directory>(this->contents);
+      directory_ptr dir_ptr;
+      dir_ptr = dynamic_pointer_cast<directory>(this->contents);
       dir_ptr->remove(to_be_removed);
-   }
-   else {
-      throw file_error ("Error cannot remove from a file");
-   }
-}
-
-wordvec inode::get_child_names(inode_ptr parent) {
-   return dynamic_pointer_cast<directory>(parent->contents)->get_content_names();
-}
-
-void inode::rremove(string to_be_removed) {
-   if(this->type == file_type::DIRECTORY_TYPE) {
-      directory_ptr dir_ptr = dynamic_pointer_cast<directory>(this->contents);
-      wordvec all_names = dir_ptr->get_content_names();
-      for(int iter = 0; iter < all_names.size(); iter++) {
-         dir_ptr->remove(all_names[iter]);
-      }
-      
    }
    else {
       throw file_error ("Error cannot remove from a file");
@@ -201,17 +182,12 @@ void inode::rremove(string to_be_removed) {
 
 ostream& operator<< (ostream& out, const inode_ptr& node) { 
    if (node->type == file_type::DIRECTORY_TYPE){
-      cout << *(dynamic_pointer_cast<directory>(node->contents));
+      out << *(dynamic_pointer_cast<directory>(node->contents));
       return out;
    } else{
-      cout << *(dynamic_pointer_cast<plain_file>(node->contents));
+      out << *(dynamic_pointer_cast<plain_file>(node->contents));
       return out;
    }
-}
-
-ostream& operator<< (ostream& out, const base_file_ptr& node) {
-   cout << "<< BASE_FILE" << endl;
-   return out;
 }
 
 file_error::file_error (const string& what):
@@ -252,7 +228,7 @@ size_t plain_file::size() const {
    for(iter = 0; iter < static_cast<int>(data.size()); iter++) {
       size += data[iter].length();
    }
-   size += data.size();
+   size += (data.size() - 1);
    DEBUGF ('i', "size = " << size);
    return size;
 }
@@ -262,15 +238,15 @@ const wordvec& plain_file::readfile() const {
 }
 
 ostream& operator<< (ostream& out, const plain_file& plain) {
-   for(int iter = 0; iter < static_cast<int>(plain.data.size());iter++) {
-      cout << plain.data.at(iter) << " ";
+   int p_size = static_cast<int>(plain.data.size());
+   for(int iter = 0; iter < p_size;iter++) {
+      out << plain.data.at(iter) << " ";
    }
-   cout << endl;
+   out << endl;
    return out;
 }
 
 void plain_file::writefile (const wordvec& words) {
-   //Works based on ubigint testing
    data = words; 
    DEBUGF ('i', words);
 }
@@ -281,11 +257,8 @@ size_t directory::size() const {
    return size;
 }
 
-// updates or inserts directory
-
 directory::directory() {
-   dirents.insert(pair<string, inode_ptr>(".", nullptr));
-   dirents.insert(pair<string, inode_ptr>("..", nullptr));
+
 }
 
 directory::directory (inode_ptr parent, inode_ptr root) {
@@ -293,16 +266,13 @@ directory::directory (inode_ptr parent, inode_ptr root) {
    dirents.insert(pair<string, inode_ptr>("..", parent));
 }
 void directory::set_dir (string name, inode_ptr dir) {
-   /*
+   
    map<string,inode_ptr>::iterator it = dirents.find(name);
    if (it != dirents.end()){
       dirents.erase(it);
    }
-   */
-   cout << "Before insert" << endl;
-   //dirents.insert(it, pair<string,inode_ptr>(name,dir));
+   
    dirents.insert(pair<string,inode_ptr>(name,dir));
-   cout << "After insert" << endl;
 }
 
 map<string,inode_ptr> directory::get_dirents() {
@@ -343,38 +313,29 @@ inode_ptr directory::mkfile (const string& filename) {
 
 wordvec directory::get_content_names() {
    wordvec names;
-   for (map<string,inode_ptr>::iterator it = dirents.begin(); it != dirents.end(); it++) {
+   for (map<string,inode_ptr>::iterator it = dirents.begin(); 
+        it != dirents.end(); it++) {
       names.push_back(it->first);
    }
    return names;
 }
 
 ostream& operator<< (ostream& out, directory& dir) {
-   cout << "In operator << for directories" << endl;
-   cout << "Dir size = " << dir.size() << endl;
-   /*
-   map<string,inode_ptr>::iterator iter;
-   for(iter = dir.get_dirents().begin(); iter != dir.get_dirents().end(); iter++) {
-      cout << iter->second->get_inode_nr() << "  " << iter->second->size();
-      cout << "  " << iter->first << endl;
-   }
-   */
-   /*
-   map<string,inode_ptr> dirents2 = dir.get_dirents();
    wordvec names = dir.get_content_names();
-   for(int iter = 0; iter < names.size(); iter++) {
-      cout << dirents2.at(names[iter]);
+   map<string,inode_ptr>::iterator iter;
+   int dir_size = static_cast<int>(names.size());
+   for(int a = 0; a < dir_size; a++) {
+      iter = dir.get_dirents().find(names[a]);
+      out << right << setw(6) <<  iter->second->get_inode_nr();
+      out << right << setw(6) << iter->second->size();
+      out << "  " << left << iter->first;
+      if(iter->second->get_type() == file_type::DIRECTORY_TYPE) {
+         out << "/" << endl;
+      }
+      else {
+         out << endl;
+      }
    }
-   */
-  /*
-   for(auto iterator = dir.get_dirents().cbegin(); iterator != dir.get_dirents().cend(); ++iterator) {
-      cout << (*iterator).second->get_inode_nr() << "  " << (*iterator).second->size();
-      cout << "  " << (*iterator).first << endl;
-   }
-   */
-   
-   cout << "Now leaving operator << for directories" << endl;
    return out;
-
 }
 

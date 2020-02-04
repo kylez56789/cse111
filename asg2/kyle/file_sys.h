@@ -26,7 +26,7 @@ using directory_ptr = shared_ptr<directory>;
 using plain_file_ptr = shared_ptr<plain_file>;
 ostream& operator<< (ostream&, file_type);
 
-
+
 // inode_state -
 //    A small convenient class to maintain the state of the simulated
 //    process:  the root (/), the current directory (.), and the
@@ -81,17 +81,16 @@ class inode {
       string get_name();
       void set_parent(inode_ptr);
       inode_ptr get_parent();
+      wordvec get_child_names();
       inode_ptr get_child(string name);
       wordvec get_names();
       void make_dir(string, inode_ptr&);
       void make_file(string, wordvec&);
       file_type get_type();
-      wordvec get_child_names();
       void remove(string);
-      void rremove(string);
 };
 
-
+
 // class base_file -
 // Just a base class at which an inode can point.  No data or
 // functions.  Makes the synthesized members useable only from
@@ -118,7 +117,7 @@ class base_file {
       virtual inode_ptr mkdir (const string& dirname);
       virtual inode_ptr mkfile (const string& filename);
 };
-
+
 // class plain_file -
 // Used to hold data.
 // synthesized default ctor -
