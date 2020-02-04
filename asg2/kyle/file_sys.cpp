@@ -176,7 +176,7 @@ void inode::remove(string to_be_removed) {
       dir_ptr->remove(to_be_removed);
    }
    else {
-      throw file_error ("Error cannot remove from a file");
+      cerr << "Error cannot remove from a file";
    }
 }
 
@@ -289,15 +289,17 @@ void directory::remove (const string& filename) {
       inode_ptr to_be_removed = dirents.at(filename);
       if(to_be_removed->get_type() == file_type::DIRECTORY_TYPE) {
          if(to_be_removed->size() > 2) {
-            throw file_error("Directory " + filename + " not empty");
+            cerr << "Directory " << filename << " not empty";
          }
-         set_dir(".",nullptr);
-         set_dir("..",nullptr);
+         else {
+            set_dir(".",nullptr);
+            set_dir("..",nullptr);
+         }
       }
       dirents.erase(it);
    }
    else {
-      throw file_error(filename + " not found");
+      cerr << filename << " not found";
    }  
 }
 

@@ -1,5 +1,6 @@
 // $Id: commands.cpp,v 1.18 2019-10-08 13:55:31-07 - - $
-
+// Tyler Tran tystran
+// Kyle Zhang kmzhang
 #include "commands.h"
 #include "debug.h"
 
@@ -26,8 +27,10 @@ command_fn find_command_fn (const string& cmd) {
    const auto result = cmd_hash.find (cmd);
    if (result == cmd_hash.end()) {
       cerr << cmd << ": no such function" << endl;
+      return NULL; 
+   } else {
+      return result->second;
    }
-   return result->second;
 }
 
 command_error::command_error (const string& what):
@@ -55,14 +58,16 @@ inode_ptr checkpath(inode_state &state, wordvec path, bool fromroot) {
 
 void rremove(inode_ptr node) {
    int iter = 2;
+   inode_ptr parent = node->get_parent();
    if (node -> get_type() == file_type::DIRECTORY_TYPE) {
       wordvec children = node -> get_child_names();
-      for (iter = 2; iter < static_cast<int>(children.size()); iter++) {
+      int children_size = static_cast<int>(children.size());
+      for (iter = 2; iter < children_size; iter++) {
          inode_ptr child = node->get_child(children.at(iter));
          rremove(child);
       }
    }
-   (node->get_parent())->remove(node->get_name());
+   parent->remove(node->get_name());
 }
 
 void rprint(inode_ptr node, inode_state& state) {
@@ -91,7 +96,7 @@ void rprint(inode_ptr node, inode_state& state) {
 }
 
 int exit_status_message() {
-   int status = exec::status();
+   int status = exec::get_status();
    cout << exec::execname() << ": exit(" << status << ")" << endl;
    return status;
 }
@@ -108,7 +113,8 @@ void fn_cat (inode_state& state, const wordvec& words){
       wordvec path = split(words[iter], "/");
       dir = checkpath(state, path, (words[1][0] == '/'));
       if (dir == nullptr) {
-         cerr << words.at(0) << ": " << path.back() << ": No such file or directory" << endl;
+         cerr << words.at(0) << ": " << path.back(); 
+         cerr << ": No such file or directory" << endl;
          break;
       }
       if (dir->get_type() == file_type::PLAIN_TYPE) {
@@ -125,7 +131,9 @@ void fn_cd (inode_state& state, const wordvec& words){
    inode_ptr dir {nullptr};
    int iter = 1;
    // check to see if too many arguments
-   if (static_cast<int>(words.size()) > 2) cerr << "cd: too many operands" << endl;
+   if (static_cast<int>(words.size()) > 2) {
+      cerr << "cd: too many operands" << endl;
+   }
    // check to see if path was given
    if (static_cast<int>(words.size()) == 2) {
       //find path
@@ -134,7 +142,8 @@ void fn_cd (inode_state& state, const wordvec& words){
       }
       dir = checkpath(state, path, ((words.at(1)).at(0) == '/'));
       if (dir == nullptr) {
-         cerr << words.at(0) << ": " << path.back() << ": No such file or directory" << endl;
+         cerr << words.at(0) << ": " << path.back(); 
+         cerr << ": No such file or directory" << endl;
       } else {
          state.set_dir(dir);
       }
@@ -151,23 +160,23 @@ void fn_echo (inode_state& state, const wordvec& words){
    cout << word_range (words.cbegin() + 1, words.cend()) << endl;
 }
 
-
+
 void fn_exit (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-  /* int status = 0;
+   int status = 0;
    if (words.size() > 1) {
       string exitnum = words.at(1);
-      for (uint i = 0; i < exitstate.size(); i++) {
+      for (uint i = 0; i < exitnum.size(); i++) {
          if (exitnum.at(i) < '0' or exitnum.at(i) > '9') {
             status = 127;
             break;
          }
       }
-      if (status != 127) status = stoi(exitstate);
+      if (status != 127) status = stoi(exitnum);
    }
-   exit_status::set(status);
-   rremove(state.get_root());*/
+   exec::set_status(status);
+   rremove(state.get_root());
    throw ysh_exit();
 }
 
@@ -178,7 +187,9 @@ void fn_ls (inode_state& state, const wordvec& words){
    wordvec path;
    int iter = 1;
    // check to see if too few arguments
-   if (static_cast<int>(words.size()) > 2) cerr << "cd: too many operands" << endl;
+   if (static_cast<int>(words.size()) > 2) {
+      cerr << "cd: too many operands" << endl;
+   }
    // check whether path was given
    if (static_cast<int>(words.size()) == 2) {
       //find path
@@ -186,7 +197,8 @@ void fn_ls (inode_state& state, const wordvec& words){
          path = split(words[iter], "/");
          dir = checkpath(state, path, ((words.at(1)).at(0) == '/'));
          if (dir == nullptr) {
-            cerr << words.at(0) << ": " << path.back() << ": No such file or directory" << endl;
+            cerr << words.at(0) << ": " << path.back(); 
+            cerr << ": No such file or directory" << endl;
             break;
          }
          cout << words.at(1) << ":" << endl;
@@ -201,11 +213,11 @@ void fn_ls (inode_state& state, const wordvec& words){
 void fn_lsr (inode_state& state, const wordvec& words){
    if (words.size() >= 2) {
       int iter = 1;
-      for (iter = 1; iter < words.size(); iter++) {
+      int word_size = static_cast<int>(words.size());
+      for (iter = 1; iter < word_size; iter++) {
          wordvec path = split(words.at(iter), "/");
          inode_ptr dir = checkpath(state,
-                                           path,
-                                           (words.at(iter).at(0) == '/'));
+                         path, (words.at(iter).at(0) == '/'));
          rprint(dir, state);
       }
    }
@@ -217,7 +229,9 @@ void fn_lsr (inode_state& state, const wordvec& words){
 void fn_make (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   if (static_cast<int>(words.size()) <= 1) cerr << "make: too few operands" << endl;
+   if (static_cast<int>(words.size()) <= 1) {
+      cerr << "make: too few operands" << endl;
+   }
    inode_ptr dir, new_file;
    wordvec path, check_path, contents;
    int iter = 2;
@@ -226,7 +240,8 @@ void fn_make (inode_state& state, const wordvec& words){
    check_path.erase(check_path.end());
    dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
    if (dir == nullptr) {
-      cerr << words.at(0) << ": " << path.back() << ": No such file or directory" << endl;
+      cerr << words.at(0) << ": " << path.back(); 
+      cerr << ": No such file or directory" << endl;
    } else {
       for (; iter < static_cast<int>(words.size()); ++iter) {
          contents.push_back(words[iter]);
@@ -238,8 +253,12 @@ void fn_make (inode_state& state, const wordvec& words){
 void fn_mkdir (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   if (static_cast<int>(words.size()) <= 1) cerr << "make: too few operands" << endl;
-   if (static_cast<int>(words.size()) > 2) cerr << "make: too many operands" << endl;
+   if (static_cast<int>(words.size()) <= 1) {
+      cerr << "make: too few operands" << endl;
+   }
+   if (static_cast<int>(words.size()) > 2) {
+      cerr << "make: too many operands" << endl;
+   }
    inode_ptr dir, new_file;
    wordvec path, check_path, contents;
    path = split(words.at(1), "/");
@@ -247,7 +266,8 @@ void fn_mkdir (inode_state& state, const wordvec& words){
    check_path.erase(check_path.end());
    dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
    if (dir == nullptr) {
-      cerr << words.at(0) << ": " << path.back() << ": No such file or directory" << endl;
+      cerr << words.at(0) << ": " << path.back();
+      cerr << ": No such file or directory" << endl;
    } else {
       dir->make_dir(path.back(), dir);
    }
@@ -258,7 +278,9 @@ void fn_prompt (inode_state& state, const wordvec& words){
    DEBUGF ('c', words);
    int iter = 0;
    string prompt("");
-   if (static_cast<int>(words.size() < 2)) cerr << "cd: too few operands" << endl;
+   if (static_cast<int>(words.size() < 2)) {
+      cerr << "cd: too few operands" << endl;
+   }
    for (iter = 1; iter < static_cast<int>(words.size()); iter++) {
       prompt = prompt + words.at(iter) + " ";
    }
@@ -289,7 +311,9 @@ void fn_pwd (inode_state& state, const wordvec& words){
 void fn_rm (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   if (static_cast<int>(words.size()) < 2) cerr << "make: too few operands" << endl;
+   if (static_cast<int>(words.size()) < 2) {
+      cerr << "make: too few operands" << endl;
+   }
    inode_ptr dir, new_file;
    wordvec path, check_path, contents;
    path = split(words.at(1), "/");
@@ -297,7 +321,8 @@ void fn_rm (inode_state& state, const wordvec& words){
    check_path.erase(check_path.end());
    dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
    if (dir == nullptr) {
-      cerr << words.at(0) << ": " << path.back() << ": No such file or directory" << endl;
+      cerr << words.at(0) << ": " << path.back();
+      cerr << ": No such file or directory" << endl;
    } else {
       dir->remove(path.back());
    }
@@ -315,10 +340,10 @@ void fn_rmr (inode_state& state, const wordvec& words){
       wordvec path, check_path, contents;
       path = split(words.at(1), "/");
       check_path = path;
-      check_path.erase(check_path.end());
       dir = checkpath(state, check_path, ((words.at(1)).at(0) == '/'));
       if (dir == nullptr) {
-         cerr << words.at(0) << ": " << path.back() << ": No such file or directory" << endl;
+         cerr << words.at(0) << ": " << path.back(); 
+         cerr << ": No such file or directory" << endl;
       } else {
          rremove(dir);
       }

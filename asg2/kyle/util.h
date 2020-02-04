@@ -1,5 +1,7 @@
 // $Id: util.h,v 1.13 2019-10-08 13:55:31-07 - - $
-
+//Tyler Tran tystran
+//Kyle Zhang kmzhang
+//
 // util -
 //    A utility class to provide various services not conveniently
 //    included in other modules.
@@ -43,12 +45,11 @@ class exec {
       static void execname (const string& argv0);
       friend int main (int, char**);
    public:
-      static void status (int status);
+      static void set_status (int status);
       static const string& execname() {return execname_; }
-      static int status() {return status_; }
+      static int get_status() {return status_; }
 };
 
-
 // split -
 //    Split a string into a wordvec (as defined above).  Any sequence
 //    of chars in the delimiter string is used as a separator.  To

@@ -1,5 +1,6 @@
 // $Id: main.cpp,v 1.10 2019-10-08 13:55:31-07 - - $
-
+// Tyler Tran tystran
+// Kyle Zhang kmzhang
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -71,7 +72,11 @@ int main (int argc, char** argv) {
                wordvec words = split (line, " \t");
                DEBUGF ('y', "words = " << words);
                command_fn fn = find_command_fn (words.at(0));
-               fn (state, words);
+               if (fn == NULL) {
+                  continue;
+               } else {
+                  fn (state, words);
+               }
             }
          }catch (command_error& error) {
             // If there is a problem discovered in any function, an

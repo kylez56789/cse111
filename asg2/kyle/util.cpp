@@ -1,5 +1,6 @@
 // $Id: util.cpp,v 1.14 2019-10-08 14:01:38-07 - - $
-
+// Tyler Tran tystran
+// Kyle Zhang kmzhang
 #include <cstdlib>
 #include <unistd.h>
 
@@ -8,6 +9,9 @@ using namespace std;
 #include "util.h"
 #include "debug.h"
 
+int exec::status_ = EXIT_SUCCESS;
+string exec::execname_;
+ 
 bool want_echo() {
    constexpr int CIN_FD {0};
    constexpr int COUT_FD {1};
@@ -17,9 +21,6 @@ bool want_echo() {
           << ", cout_is_not_a_tty = " << cout_is_not_a_tty);
    return cin_is_not_a_tty or cout_is_not_a_tty;
 }
-
-string exec::execname_; // Must be initialized from main().
-int exec::status_ = EXIT_SUCCESS;
 
 string basename (const string &arg) { 
    return arg.substr (arg.find_last_of ('/') + 1);
@@ -32,11 +33,10 @@ void exec::execname (const string& argv0) {
    DEBUGF ('u', "execname = " << execname_);
 }
 
-void exec::status (int status) {
+void exec::set_status(int status) {
    if (status_ < status) status_ = status;
 }
 
-
 wordvec split (const string& line, const string& delimiters) {
    wordvec words;
    size_t end = 0;
@@ -54,7 +54,7 @@ wordvec split (const string& line, const string& delimiters) {
 }
 
 ostream& complain() {
-   exec::status (EXIT_FAILURE);
+   exec::set_status(EXIT_FAILURE);
    cerr << exec::execname() << ": ";
    return cerr;
 }
