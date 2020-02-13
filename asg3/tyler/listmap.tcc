@@ -27,7 +27,8 @@ template <typename key_t, typename mapped_t, class less_t>
 typename listmap<key_t,mapped_t,less_t>::iterator
 listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
    DEBUGF ('l', &pair << "->" << pair);
-   if (this->begin() == anchor() and this->end() == anchor()){
+	//if (&anchor()->next == &anchor_){
+   if (this->empty()){
 		node* newNode = new node(anchor(), anchor(), pair);
 		anchor()->next = newNode;
 		anchor()->prev = newNode;
@@ -44,8 +45,8 @@ listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
 		}
 		node* newNode = new node(Node, Node->prev, pair);
 		Node->prev->next = newNode;
-		Node->next = newNode;
-		return it;
+		Node->prev = newNode;
+		return newNode;
 	}
 	return it;
 }

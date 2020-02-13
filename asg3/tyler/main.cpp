@@ -40,7 +40,7 @@ void scan_options (int argc, char** argv) {
    }
 }
 
-void process_file(istream& infile, const string& filename,str_str_map& test) {
+void process_file(istream& infile, const string& filename,str_str_map& list) {
    regex comment_regex {R"(^\s*(#.*)?$)"};
    regex key_value_regex {R"(^\s*(.*?)\s*=\s*(.*?)\s*$)"};
    regex trimmed_regex {R"(^\s*([^=]+?)\s*$)"};
@@ -59,26 +59,41 @@ void process_file(istream& infile, const string& filename,str_str_map& test) {
          cout << "key  : \"" << result[1] << "\"" << endl;
          cout << "value: \"" << result[2] << "\"" << endl;
          if(result[1] == "" && result[2] == "") {
-            for (str_str_map::iterator itor = test.begin();
-                 itor != test.end(); ++itor) {
-               cout << "hi" << endl;
-               //cout << "During iteration: " << *itor << endl;
+            for (str_str_map::iterator itor = list.begin();
+                 itor != list.end(); ++itor) {
+               cout << "= " << *itor << endl;
             }
-            cout << "HELLO" << endl;
          }
          else if (result[1] != "" && result[2] == "") {
-            cout << "Delete pair from map" << endl;
+            str_str_map::iterator itor = list.find(result[1]);
+            if (itor != list.end()) {
+               list.erase(itor);
+            }
+            else {
+               cout << "Error msg for deleting node not in map?\n";
+            }   
          }
          else if (result[1] == "" && result[2] != "") {
-            cout << "Print all pairs with given value" << endl;
+            for (str_str_map::iterator itor = list.begin();
+                 itor != list.end(); ++itor) {
+               if((*itor).second == result[2]) {
+                  cout << "= " << *itor << endl;
+               }
+            }
          }
          else {
             cout << "Insert based on key or replace value" << endl;
             str_str_pair to_be_inserted (result[1],result[2]);
-            test.insert(to_be_inserted);
+            list.insert(to_be_inserted);
          }
       }else if (regex_search (line, result, trimmed_regex)) {
-         cout << "query: \"" << result[1] << "\"" << endl;
+         str_str_map::iterator itor = list.find(result[1]);
+         if (itor == list.end()) {
+            cerr << result[1] << ": key not found" << endl;
+         }
+         else {
+            cout << *itor << endl;
+         }   
          
       }else {
          assert (false and "This can not happen.");
@@ -90,9 +105,9 @@ void process_file(istream& infile, const string& filename,str_str_map& test) {
 int main (int argc, char** argv) {
    sys_info::execname (argv[0]);
    scan_options (argc, argv);
-   //str_str_map list {};
+   str_str_map list {};
    vector<string> filenames;  
-   str_str_map test;
+   str_str_map test {};
    for (char** argp = &argv[optind]; argp != &argv[argc]; ++argp) {
       str_str_pair pair (*argp, to_string<int> (argp - argv));
       filenames.push_back(*argp);
@@ -110,7 +125,7 @@ int main (int argc, char** argv) {
    for(const auto& filename: filenames) {
       if(filename == cin_name) {
          cout << "Reading from cin" << endl;
-         process_file(cin, filename, test); 
+			process_file(cin, filename, list);
       }
       else {
          ifstream infile (filename);
@@ -119,17 +134,20 @@ int main (int argc, char** argv) {
          }
          else {
             cout << "Read from file " << filename << endl;
-            process_file(infile, filename, test);
+            process_file(infile, filename, list);
             infile.close();
          }
       }
    }
-   for (str_str_map::iterator itor = test.begin();
-        itor != test.end(); ++itor) {
+   /*
+   for (str_str_map::iterator itor = list.begin();
+		//itor != test.end(); ++itor) {
+		itor != list.end(); ++itor) {
       cout << "During iteration: " << *itor << endl;
    }
-   str_str_map::iterator itor = test.begin();
-   test.erase (itor);
+   */
+   str_str_map::iterator itor = list.begin();
+   list.erase (itor);
 
    cout << "EXIT_SUCCESS" << endl;
    return EXIT_SUCCESS;

@@ -37,8 +37,8 @@ class listmap {
       iterator find (const key_type&);
       iterator erase (iterator position);
       iterator begin() { return anchor()->next; }
-      iterator end() { return anchor()->prev; }
-      bool empty() const { return anchor_->next == anchor_; }
+      iterator end() { return anchor(); }
+      bool empty() const { return anchor_.next == &anchor_; }
 };
 
 
