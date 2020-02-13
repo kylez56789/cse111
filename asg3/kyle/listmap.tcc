@@ -48,7 +48,6 @@ listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
 		Node->prev = newNode;
 		return newNode;
 	}
-	return it;
 }
 
 //
@@ -57,13 +56,14 @@ listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
 template <typename key_t, typename mapped_t, class less_t>
 typename listmap<key_t,mapped_t,less_t>::iterator
 listmap<key_t,mapped_t,less_t>::find (const key_type& that) {
-	for (node* Node = anchor()->next; Node != anchor(); Node = Node->next) {
+	node* Node;
+	for (Node = anchor()->next; Node != anchor(); Node = Node->next) {
 		if (Node->value.first == that) {
 			return Node;
 		}
 	}	
    DEBUGF ('l', that);
-   return iterator();
+	return Node;
 }
 
 //
@@ -83,7 +83,7 @@ listmap<key_t,mapped_t,less_t>::erase (iterator position) {
 		delete Node;
 		position.erase();
 	}
-   return iterator();
+	return iterator();
 }
 
 
