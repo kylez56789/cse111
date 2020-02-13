@@ -27,7 +27,8 @@ template <typename key_t, typename mapped_t, class less_t>
 typename listmap<key_t,mapped_t,less_t>::iterator
 listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
    DEBUGF ('l', &pair << "->" << pair);
-   if (this->begin() == this->end()){
+	//if (&anchor()->next == &anchor_){
+   if (this->empty()){
 		node* newNode = new node(anchor(), anchor(), pair);
 		anchor()->next = newNode;
 		anchor()->prev = newNode;
@@ -35,17 +36,17 @@ listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
 	}
 	iterator it = this->find(pair.first);
 	if (iterator() != it) {
-		it->second = pair->second;
+		it->second = pair.second;
 		return it;
 	} else {
 		node* Node = anchor()->next;
-		while(Node != anchor() and less(NodeA->value.first, pair.first)) {
+		while(Node != anchor() and less(Node->value.first, pair.first)) {
 			Node = Node->next;
 		}
 		node* newNode = new node(Node, Node->prev, pair);
 		Node->prev->next = newNode;
-		Node->next = newNode;
-		return it;
+		Node->prev = newNode;
+		return newNode;
 	}
 	return it;
 }
@@ -88,7 +89,6 @@ listmap<key_t,mapped_t,less_t>::erase (iterator position) {
 
 
 template <typename key_t, typename mapped_t, class less_t>
-typename listmap<key_t,mapped_t,less_t>::iterator
 void listmap<key_t,mapped_t,less_t>::iterator::erase(){
 	this->where = nullptr;
 }
