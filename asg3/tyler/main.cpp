@@ -19,6 +19,8 @@ using namespace std;
 using str_str_map = listmap<string,string>;
 using str_str_pair = str_str_map::value_type;
 
+//using key_map_map = listmap<key_t, mapped_t>;
+
 const string cin_name = "-";
 
 void scan_options (int argc, char** argv) {
@@ -38,7 +40,7 @@ void scan_options (int argc, char** argv) {
    }
 }
 
-void process_file( istream& infile, const string& filename) {
+void process_file(istream& infile, const string& filename,str_str_map& test) {
    regex comment_regex {R"(^\s*(#.*)?$)"};
    regex key_value_regex {R"(^\s*(.*?)\s*=\s*(.*?)\s*$)"};
    regex trimmed_regex {R"(^\s*([^=]+?)\s*$)"};
@@ -56,8 +58,28 @@ void process_file( istream& infile, const string& filename) {
       if (regex_search (line, result, key_value_regex)) {
          cout << "key  : \"" << result[1] << "\"" << endl;
          cout << "value: \"" << result[2] << "\"" << endl;
+         if(result[1] == "" && result[2] == "") {
+            for (str_str_map::iterator itor = test.begin();
+                 itor != test.end(); ++itor) {
+               cout << "hi" << endl;
+               //cout << "During iteration: " << *itor << endl;
+            }
+            cout << "HELLO" << endl;
+         }
+         else if (result[1] != "" && result[2] == "") {
+            cout << "Delete pair from map" << endl;
+         }
+         else if (result[1] == "" && result[2] != "") {
+            cout << "Print all pairs with given value" << endl;
+         }
+         else {
+            cout << "Insert based on key or replace value" << endl;
+            str_str_pair to_be_inserted (result[1],result[2]);
+            test.insert(to_be_inserted);
+         }
       }else if (regex_search (line, result, trimmed_regex)) {
          cout << "query: \"" << result[1] << "\"" << endl;
+         
       }else {
          assert (false and "This can not happen.");
       }
@@ -68,7 +90,7 @@ void process_file( istream& infile, const string& filename) {
 int main (int argc, char** argv) {
    sys_info::execname (argv[0]);
    scan_options (argc, argv);
-   
+   //str_str_map list {};
    vector<string> filenames;  
    str_str_map test;
    for (char** argp = &argv[optind]; argp != &argv[argc]; ++argp) {
@@ -88,7 +110,7 @@ int main (int argc, char** argv) {
    for(const auto& filename: filenames) {
       if(filename == cin_name) {
          cout << "Reading from cin" << endl;
-         process_file(cin, filename); 
+         process_file(cin, filename, test); 
       }
       else {
          ifstream infile (filename);
@@ -97,20 +119,15 @@ int main (int argc, char** argv) {
          }
          else {
             cout << "Read from file " << filename << endl;
-            process_file(infile, filename);
+            process_file(infile, filename, test);
             infile.close();
          }
       }
    }
-
-
-
-
    for (str_str_map::iterator itor = test.begin();
         itor != test.end(); ++itor) {
       cout << "During iteration: " << *itor << endl;
    }
-   
    str_str_map::iterator itor = test.begin();
    test.erase (itor);
 

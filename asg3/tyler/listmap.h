@@ -37,11 +37,11 @@ class listmap {
       iterator find (const key_type&);
       iterator erase (iterator position);
       iterator begin() { return anchor()->next; }
-      iterator end() { return anchor(); }
+      iterator end() { return anchor()->prev; }
       bool empty() const { return anchor_->next == anchor_; }
 };
 
-
+
 template <typename key_t, typename mapped_t, class less_t>
 class listmap<key_t,mapped_t,less_t>::iterator {
    private:
