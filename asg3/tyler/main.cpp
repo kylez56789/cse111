@@ -46,18 +46,17 @@ void process_file(istream& infile, const string& filename,
    int linenum = 1;
    for(;;) {
       string line;
+      getline(infile,line);
       if (infile.eof()) {
          break;
       }
       cout << filename << ": " << linenum << ": ";
-      getline(infile, line);
+      //getline(infile, line);
       cout << line << endl;
-      //if (infile.eof()) {
-      //   break;
-      //}
       smatch result;
       if (regex_search (line, result, comment_regex)) {
          linenum++;
+         //cout << "Comment/Empty Line";
          //cout << endl;
          continue;
       }
@@ -78,7 +77,6 @@ void process_file(istream& infile, const string& filename,
             if (itor != list.end()) {
                list.erase(itor);
             } 
-            //cout << endl;  
          }
          else if (result[1] == "" && result[2] != "") {
             bool printed = false;
@@ -118,20 +116,40 @@ int main (int argc, char** argv) {
    sys_info::execname (argv[0]);
    scan_options (argc, argv);
    str_str_map list {};
-   vector<string> filenames;  
+   int num_inputs = 0;
+   //str_str_map filenames {};  
    for (char** argp = &argv[optind]; argp != &argv[argc]; ++argp) {
-      str_str_pair pair (*argp, to_string<int> (argp - argv));
-      filenames.push_back(*argp);
+      //str_str_pair pair (*argp, to_string<int> (argp - argv));
+      //str_str_pair to_insert (argp-argv, *argp);
+      //filenames.insert(to_insert);
+      num_inputs++;
+      if(*argp == cin_name) {
+         process_file(cin, *argp, list);
+      }
+      else {
+         ifstream infile (*argp);
+         if(infile.fail()) {
+            complain() << *argp <<
+               ": No such file or directory" << endl;
+            sys_info::exit_status(1);
+         }
+         else {
+            process_file(infile, *argp, list);
+            infile.close();
+         }
+      }
+      
    }
 
-   if(filenames.size() == 0) {
-      filenames.push_back(cin_name);
+   if(num_inputs == 0) {
+      process_file(cin, "-",list);
    }
+   /*
    for(const auto& filename: filenames) {
       if(filename == cin_name) {
          process_file(cin, filename, list);
       }
-   else {
+      else {
          ifstream infile (filename);
          if(infile.fail()) {
             complain() << filename << 
@@ -144,6 +162,7 @@ int main (int argc, char** argv) {
          }
       }
    }
+   */
    str_str_map::iterator itor = list.begin();
    list.erase (itor);
    return sys_info::exit_status();
