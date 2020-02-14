@@ -19,8 +19,6 @@ using namespace std;
 using str_str_map = listmap<string,string>;
 using str_str_pair = str_str_map::value_type;
 
-//using key_map_map = listmap<key_t, mapped_t>;
-
 const string cin_name = "-";
 
 void scan_options (int argc, char** argv) {
@@ -40,65 +38,77 @@ void scan_options (int argc, char** argv) {
    }
 }
 
-void process_file(istream& infile, const string& filename,str_str_map& list) {
+void process_file(istream& infile, const string& filename,
+                                       str_str_map& list) {
    regex comment_regex {R"(^\s*(#.*)?$)"};
    regex key_value_regex {R"(^\s*(.*?)\s*=\s*(.*?)\s*$)"};
    regex trimmed_regex {R"(^\s*([^=]+?)\s*$)"};
+   int linenum = 1;
    for(;;) {
       string line;
-      getline(infile, line);
+      getline(infile,line);
       if (infile.eof()) {
          break;
       }
+      cout << filename << ": " << linenum << ": ";
+      //getline(infile, line);
+      cout << line << endl;
       smatch result;
       if (regex_search (line, result, comment_regex)) {
-         cout << "Comment or empty line." << endl;
+         linenum++;
+         //cout << "Comment/Empty Line";
+         //cout << endl;
          continue;
       }
       if (regex_search (line, result, key_value_regex)) {
-         cout << "key  : \"" << result[1] << "\"" << endl;
-         cout << "value: \"" << result[2] << "\"" << endl;
          if(result[1] == "" && result[2] == "") {
+            bool printed = false;
             for (str_str_map::iterator itor = list.begin();
-                 itor != list.end(); ++itor) {
-               cout << "= " << *itor << endl;
+               itor != list.end(); ++itor) {
+               cout<<itor->first<<" = "<<itor->second<<endl;
+               printed = true;
+            }
+            if(printed == false) {
+               //cout << endl;
             }
          }
          else if (result[1] != "" && result[2] == "") {
             str_str_map::iterator itor = list.find(result[1]);
             if (itor != list.end()) {
                list.erase(itor);
-            }
-            else {
-               cout << "Error msg for deleting node not in map?\n";
-            }   
+            } 
          }
          else if (result[1] == "" && result[2] != "") {
+            bool printed = false;
             for (str_str_map::iterator itor = list.begin();
                  itor != list.end(); ++itor) {
                if((*itor).second == result[2]) {
-                  cout << "= " << *itor << endl;
+                  cout<<itor->first<<" = "<<itor->second<<endl;
+                  printed = true;
                }
+            }
+            if(printed == false) {
+               //cout << endl;
             }
          }
          else {
-            cout << "Insert based on key or replace value" << endl;
             str_str_pair to_be_inserted (result[1],result[2]);
             list.insert(to_be_inserted);
+            cout << result[1] << " = " << result[2]<<endl;
          }
       }else if (regex_search (line, result, trimmed_regex)) {
          str_str_map::iterator itor = list.find(result[1]);
          if (itor == list.end()) {
-            cerr << result[1] << ": key not found" << endl;
+            cerr << result[1] << ": key not found"<<endl;
          }
          else {
-            cout << *itor << endl;
+             cout<<itor->first<<" = "<<itor->second<<endl;
          }   
          
       }else {
          assert (false and "This can not happen.");
       }
-      cout << endl;
+      linenum++;
    }   
 }
 
@@ -106,50 +116,55 @@ int main (int argc, char** argv) {
    sys_info::execname (argv[0]);
    scan_options (argc, argv);
    str_str_map list {};
-   vector<string> filenames;  
-   str_str_map test {};
+   int num_inputs = 0;
+   //str_str_map filenames {};  
    for (char** argp = &argv[optind]; argp != &argv[argc]; ++argp) {
-      str_str_pair pair (*argp, to_string<int> (argp - argv));
-      filenames.push_back(*argp);
-      cout << "Before insert: " << pair << endl;
-      test.insert (pair);
+      //str_str_pair pair (*argp, to_string<int> (argp - argv));
+      //str_str_pair to_insert (argp-argv, *argp);
+      //filenames.insert(to_insert);
+      num_inputs++;
+      if(*argp == cin_name) {
+         process_file(cin, *argp, list);
+      }
+      else {
+         ifstream infile (*argp);
+         if(infile.fail()) {
+            complain() << *argp <<
+               ": No such file or directory" << endl;
+            sys_info::exit_status(1);
+         }
+         else {
+            process_file(infile, *argp, list);
+            infile.close();
+         }
+      }
+      
    }
 
-
-   if(filenames.size() == 0) {
-      filenames.push_back(cin_name);
+   if(num_inputs == 0) {
+      process_file(cin, "-",list);
    }
-   for(int a = 0; a < filenames.size(); a++) {
-      cout << "filenames " << a << ":" << filenames[a] << endl;
-   }
+   /*
    for(const auto& filename: filenames) {
       if(filename == cin_name) {
-         cout << "Reading from cin" << endl;
-			process_file(cin, filename, list);
+         process_file(cin, filename, list);
       }
       else {
          ifstream infile (filename);
          if(infile.fail()) {
-            cerr << "No such file or directory" << endl;
+            complain() << filename << 
+               ": No such file or directory" << endl;
+            sys_info::exit_status(1);
          }
          else {
-            cout << "Read from file " << filename << endl;
             process_file(infile, filename, list);
             infile.close();
          }
       }
    }
-   /*
-   for (str_str_map::iterator itor = list.begin();
-		//itor != test.end(); ++itor) {
-		itor != list.end(); ++itor) {
-      cout << "During iteration: " << *itor << endl;
-   }
    */
    str_str_map::iterator itor = list.begin();
    list.erase (itor);
-
-   cout << "EXIT_SUCCESS" << endl;
-   return EXIT_SUCCESS;
+   return sys_info::exit_status();
 }
 
