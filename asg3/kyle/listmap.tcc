@@ -15,8 +15,7 @@
 template <typename key_t, typename mapped_t, class less_t>
 listmap<key_t,mapped_t,less_t>::~listmap() {
    DEBUGF ('l', reinterpret_cast<const void*> (this));
-	while (less(anchor()->value.first, anchor()->next)
-	 or less(anchor()->next->value.first, anchor()->value.first)) {
+	while (anchor() != anchor()->next) {
 		this->erase(this->begin());
 	}
 }
@@ -36,13 +35,12 @@ listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
 		return newNode;
 	}
 	iterator it = this->find(pair.first);
-	if (less(this->end(), it) or less(it, this->end()) {
+	if (this->end() != it) {
 		it->second = pair.second;
 		return it;
 	} else {
 		node* Node = anchor()->next;
-		while((less(Node, anchor()) or less(anchor(), Node)) 
-		and less(Node->value.first, pair.first)) {
+		while(Node != anchor() and less(Node->value.first, pair.first)) {
 			Node = Node->next;
 		}
 		node* newNode = new node(Node, Node->prev, pair);
@@ -59,9 +57,7 @@ template <typename key_t, typename mapped_t, class less_t>
 typename listmap<key_t,mapped_t,less_t>::iterator
 listmap<key_t,mapped_t,less_t>::find (const key_type& that) {
 	node* Node;
-	for (Node = anchor()->next;
-			 less(Node, anchor()) or less(anchor(), Node); 
-		Node = Node->next) {
+	for (Node = anchor()->next; Node != anchor(); Node = Node->next) {
 		if (!less(Node->value.first,that) 
 		and !less(that, Node->value.first)) {
 			return Node;
@@ -79,11 +75,10 @@ typename listmap<key_t,mapped_t,less_t>::iterator
 listmap<key_t,mapped_t,less_t>::erase (iterator position) {
    DEBUGF ('l', &*position);
 	node* Node = anchor()->next;
-	for (; (less(Node, anchor()) or less(anchor(), Node)) 
-			and (less(Node->value.first, position->first) 
-			or less(position->first, Node->value.first));
-			 Node = Node->next){}
-	if (less(Node, anchor()) or less(anchor(), Node)) {
+	for (; Node != anchor() and 
+	(less(Node->value.first,position->first) 
+	or less(position->first,Node->value.first)); Node = Node->next){}
+	if (Node != anchor()) {
 		Node->prev->next = Node->next;
 		Node->next->prev = Node->prev;
 		Node->next = nullptr;
