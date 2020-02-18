@@ -1,4 +1,6 @@
 // $Id: debug.cpp,v 1.3 2019-10-22 12:41:48-07 - - $
+//Tyler Tran tystran
+//Kyle Zhang kmzhang
 
 #include <climits>
 #include <iostream>

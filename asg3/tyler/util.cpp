@@ -1,4 +1,6 @@
 // $Id: util.cpp,v 1.18 2020-02-06 12:55:59-08 - - $
+//Tyler Tran tystran
+//Kyle Zhang kmzhang
 
 #include <cassert>
 #include <cerrno>

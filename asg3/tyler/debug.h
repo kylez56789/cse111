@@ -1,5 +1,6 @@
 // $Id: debug.h,v 1.2 2019-10-22 12:41:48-07 - - $
-
+//Tyler Tran tystran
+//Kyle Zhang kmzhang
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
 

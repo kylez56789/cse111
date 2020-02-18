@@ -1,4 +1,6 @@
 // $Id: main.cpp,v 1.11 2018-01-25 14:19:29-08 - - $
+//Tyler Tran tystran
+//Kyle Zhang kmzhang
 
 #include <cstdlib>
 #include <exception>
@@ -56,20 +58,13 @@ void process_file(istream& infile, const string& filename,
       smatch result;
       if (regex_search (line, result, comment_regex)) {
          linenum++;
-         //cout << "Comment/Empty Line";
-         //cout << endl;
          continue;
       }
       if (regex_search (line, result, key_value_regex)) {
          if(result[1] == "" && result[2] == "") {
-            bool printed = false;
             for (str_str_map::iterator itor = list.begin();
                itor != list.end(); ++itor) {
                cout<<itor->first<<" = "<<itor->second<<endl;
-               printed = true;
-            }
-            if(printed == false) {
-               //cout << endl;
             }
          }
          else if (result[1] != "" && result[2] == "") {
@@ -79,16 +74,11 @@ void process_file(istream& infile, const string& filename,
             } 
          }
          else if (result[1] == "" && result[2] != "") {
-            bool printed = false;
             for (str_str_map::iterator itor = list.begin();
                  itor != list.end(); ++itor) {
                if((*itor).second == result[2]) {
                   cout<<itor->first<<" = "<<itor->second<<endl;
-                  printed = true;
                }
-            }
-            if(printed == false) {
-               //cout << endl;
             }
          }
          else {
@@ -144,25 +134,6 @@ int main (int argc, char** argv) {
    if(num_inputs == 0) {
       process_file(cin, "-",list);
    }
-   /*
-   for(const auto& filename: filenames) {
-      if(filename == cin_name) {
-         process_file(cin, filename, list);
-      }
-      else {
-         ifstream infile (filename);
-         if(infile.fail()) {
-            complain() << filename << 
-               ": No such file or directory" << endl;
-            sys_info::exit_status(1);
-         }
-         else {
-            process_file(infile, filename, list);
-            infile.close();
-         }
-      }
-   }
-   */
    str_str_map::iterator itor = list.begin();
    list.erase (itor);
    return sys_info::exit_status();

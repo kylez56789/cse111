@@ -58,7 +58,8 @@ typename listmap<key_t,mapped_t,less_t>::iterator
 listmap<key_t,mapped_t,less_t>::find (const key_type& that) {
 	node* Node;
 	for (Node = anchor()->next; Node != anchor(); Node = Node->next) {
-		if (Node->value.first == that) {
+		if (!less(Node->value.first,that) 
+		and !less(that, Node->value.first)) {
 			return Node;
 		}
 	}	
@@ -74,7 +75,9 @@ typename listmap<key_t,mapped_t,less_t>::iterator
 listmap<key_t,mapped_t,less_t>::erase (iterator position) {
    DEBUGF ('l', &*position);
 	node* Node = anchor()->next;
-	for (; Node != anchor() and Node->value.first != position->first; Node = Node->next){}
+	for (; Node != anchor() and 
+	(less(Node->value.first,position->first) 
+	or less(position->first,Node->value.first)); Node = Node->next){}
 	if (Node != anchor()) {
 		Node->prev->next = Node->next;
 		Node->next->prev = Node->prev;

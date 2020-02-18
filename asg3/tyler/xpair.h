@@ -1,4 +1,6 @@
 // $Id: xpair.h,v 1.5 2019-02-21 17:27:16-08 - - $
+//Tyler Tran tystran
+//Kyle Zhang kmzhang
 
 #ifndef __XPAIR_H__
 #define __XPAIR_H__
