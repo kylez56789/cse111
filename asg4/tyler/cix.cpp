@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <fstream>
 using namespace std;
 
 #include <libgen.h>
@@ -23,6 +24,8 @@ unordered_map<string,cix_command> command_map {
    {"help", cix_command::HELP},
    {"ls"  , cix_command::LS  },
    {"put" , cix_command::PUT },
+   {"get" , cix_command::GET },
+   {"rm"  , cix_command::RM  },
 };
 using wordvec = vector<string>;
 wordvec split (const string& line, const string& delimiters) {
@@ -99,16 +102,77 @@ void cix_put (client_socket& server, string file_name) {
    }
    else {
       cout << "Valid File Name " << file_name << endl;
+      ifstream input(file_name, ios::binary);
+      if(!input) {
+         outlog << "Error: File not found" << endl;
+      }
+      else {
+         int size = sizeof(header.filename);
+         strncpy(header.filename, file_name.c_str(), size);
+         char buffer[0x1000];
+         input.seekg(0,input.end);
+         int len = input.tellg();
+         input.seekg(0, input.beg);
+         input.read(buffer, len);
+         cout << buffer << endl;//Print statement
+         outlog << "sending header " << header << endl;
+         send_packet (server, &header, sizeof header);
+         send_packet (server, buffer, len);
+         recv_packet (server, &header, sizeof header);
+         outlog << "received header " << header << endl;
+         if(header.command != cix_command::ACK) {
+            outlog << "Sent put, server didn't return ACK" << endl;
+            outlog << "Server returned " << header << endl;
+         }
+         else {
+            outlog <<" Put command successful" << endl;
+         }
+      input.close();
+      }
+   }
+}
+
+void cix_get (client_socket& server, string file_name) {
+   cix_header header;
+   header.command = cix_command::GET;
+   if(not valid_filename(file_name)) {
+      cout << "Error: Invalid file name " << file_name << endl;
+   }
+   else {
+      cout << "Valid File Name " << file_name << endl;
       int size = sizeof(header.filename);
       strncpy(header.filename, file_name.c_str(), size);
-      //TODO(tystran): Set file name
       outlog << "sending header " << header << endl;
       send_packet (server, &header, sizeof header);
-      //Probably need to send another packet including the file
-      //Algorithm:
-      //Send packet with name
-      //Send packet(s) with data(maybe split up)
-      //Send packet with eof to end
+      recv_packet (server, &header, sizeof header);
+      outlog << "received header " << header << endl;
+      if (header.command != cix_command::FILEOUT) {
+         outlog << "sent LS, server did not return LSOUT" << endl;
+         outlog << "server returned " << header << endl;
+      }else {
+         auto buffer = make_unique<char[]> (header.nbytes + 1);
+         recv_packet (server, buffer.get(), header.nbytes);
+         outlog << "received " << header.nbytes << " bytes" << endl;
+         buffer[header.nbytes] = '\0';
+         ofstream output(file_name);
+         output.write(buffer.get(), header.nbytes);
+         output.close();
+      }
+   }
+}
+
+void cix_rm (client_socket& server, string file_name) {
+   cix_header header;
+   header.command = cix_command::RM;
+   if(not valid_filename(file_name)) {
+      cout << "Error: Invalid file name " << file_name << endl;
+   }
+   else {
+      cout << "Valid File Name " << file_name << endl;
+      int size = sizeof(header.filename);
+      strncpy(header.filename, file_name.c_str(), size);
+      outlog << "sending header " << header << endl;
+      send_packet (server, &header, sizeof header);
       recv_packet (server, &header, sizeof header);
       outlog << "received header " << header << endl;
       if(header.command != cix_command::ACK) {
@@ -116,7 +180,7 @@ void cix_put (client_socket& server, string file_name) {
          outlog << "Server returned " << header << endl;
       }
       else {
-         outlog <<" Put command successful" << endl;
+         outlog <<" rm command successful" << endl;
       }
    }
 }
@@ -151,7 +215,8 @@ int main (int argc, char** argv) {
          cix_command cmd = itor == command_map.end()
                          ? cix_command::ERROR : itor->second;
          string filename;
-         if(cmd == cix_command::PUT || cmd == cix_command::GET) {
+         if(cmd == cix_command::PUT || cmd == cix_command::GET
+            || cmd == cix_command::RM) {
             //TODO(tystran): add more to this statement rm
             //Get file name if there, if not error to outlog
             if (words.size() < 2) {
@@ -176,10 +241,14 @@ int main (int argc, char** argv) {
                cix_ls (server);
                break;
             case cix_command::PUT:
-               //TODO(tystran): file names
-
                cix_put (server, filename);
                break;
+            case cix_command::GET:
+              cix_put (server, filename);
+              break;
+            case cix_command::RM:
+              cix_put (server, filename);
+              break;
             default:
                outlog << words[0] << ": invalid command" << endl;
                break;
