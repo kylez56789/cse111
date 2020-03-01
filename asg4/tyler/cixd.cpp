@@ -12,7 +12,7 @@ using namespace std;
 #include "protocol.h"
 #include "logstream.h"
 #include "sockets.h"
-
+	
 logstream outlog (cout);
 struct cix_exit: public exception {};
 
@@ -48,10 +48,25 @@ void reply_ls (accepted_socket& client_sock, cix_header& header) {
 }
 
 void reply_put (accepted_socket& client_sock, cix_header& header) {
-   cout << "POOOOOOOOOOOOOOOOOOO" << endl;
+   char buff[header.nbytes + 1];
+   recv_packet (client_sock, buff, header.nbytes);
+   buff[header.nbytes] = '\0';
+   ofstream os(header.filename, ofstream::binary);
+   if (os) {
+	   header.command = cix_command::ACK;
+	   os.write(buff, header.nbytes);
+   }
+   else {
+	   header.command = cix_command::NAK;
+   }
+   send_packet(client_sock, &header, sizeof header);
 }
 
-
+
+void reply_get (accepted_socket& client_sock, cix_header& header) {
+
+}
+
 void run_server (accepted_socket& client_sock) {
    outlog.execname (outlog.execname() + "-server");
    outlog << "connected to " << to_string (client_sock) << endl;
