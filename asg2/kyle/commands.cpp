@@ -121,7 +121,6 @@ void fn_cat (inode_state& state, const wordvec& words){
          cout << dir;
       } else cerr << "cat: can't cat a directory!" << endl;
    }
-   
 }
 
 void fn_cd (inode_state& state, const wordvec& words){

@@ -47,6 +47,13 @@ void reply_ls (accepted_socket& client_sock, cix_header& header) {
    outlog << "sent " << ls_output.size() << " bytes" << endl;
 }
 
+void reply_rm (accepted_socket& client_sock, cix_header& header) {
+   bool unlinked = unlink(header.filename);
+   if (unlinked == true) header.command = cix_command::ACK;
+   else header.command = cix_command::NAK;
+   send_packet (client_sock, &header, sizeof header);
+}
+
 void reply_put (accepted_socket& client_sock, cix_header& header) {
    char buff[header.nbytes + 1];
    recv_packet (client_sock, buff, header.nbytes);
@@ -60,11 +67,29 @@ void reply_put (accepted_socket& client_sock, cix_header& header) {
 	   header.command = cix_command::NAK;
    }
    send_packet(client_sock, &header, sizeof header);
+   os.close();
 }
 
 
 void reply_get (accepted_socket& client_sock, cix_header& header) {
-
+   ifstream is (header.filename, ifstream::binary);
+   if (is) {
+      is.seekg(0, is.end);
+      int len = is.tellg();
+      is.seekg(0, is.beg);
+      char buff[len];
+      is.read(buff, len); 
+      header.nbytes = len;
+      header.command = cix_command::FILE;
+      send_packet (client_sock, &header, sizeof header);
+      send_packet (client_sock, buffer, len);
+      }
+   else
+   {
+      header.command = cix_command::NAK;
+      send_packet (client_sock, &header, sizeof header);
+   }
+   is.close();
 }
 
 void run_server (accepted_socket& client_sock) {
