@@ -115,7 +115,7 @@ void cix_put (client_socket& server, string file_name) {
          input.seekg(0, input.beg);
          input.read(buffer, len);
          header.nbytes = len;
-         cout << buffer << endl;//Print statement
+         cout << buffer << endl;//Print statement remove later
          outlog << "sending header 1" << header << endl;
          send_packet (server, &header, sizeof header);
          outlog << "sending payload" << endl;
@@ -179,7 +179,7 @@ void cix_rm (client_socket& server, string file_name) {
       recv_packet (server, &header, sizeof header);
       outlog << "received header " << header << endl;
       if(header.command != cix_command::ACK) {
-         outlog << "Sent put, server didn't return ACK" << endl;
+         outlog << "Sent rm, server didn't return ACK" << endl;
          outlog << "Server returned " << header << endl;
       }
       else {

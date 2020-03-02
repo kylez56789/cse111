@@ -13,7 +13,7 @@ using namespace std;
 #include "protocol.h"
 #include "logstream.h"
 #include "sockets.h"
-	
+
 logstream outlog (cout);
 struct cix_exit: public exception {};
 
@@ -35,7 +35,7 @@ void reply_ls (accepted_socket& client_sock, cix_header& header) {
       ls_output.append (buffer);
    }
    int status = pclose (ls_pipe);
-   if (status < 0) outlog << ls_cmd << ": " << strerror (errno) << endl;
+   if (status < 0)outlog << ls_cmd << ": " << strerror(errno) << endl;
               else outlog << ls_cmd << ": exit " << (status >> 8)
                           << " signal " << (status & 0x7F)
                           << " core " << (status >> 7 & 1) << endl;
@@ -65,15 +65,15 @@ void reply_put (accepted_socket& client_sock, cix_header& header) {
    char buff[0x1000];
    recv_packet (client_sock, buff, header.nbytes);
    outlog << "2" << endl;
-   buff[header.nbytes] = '\0';
+   //buff[header.nbytes] = '\0';
    ofstream os(header.filename, ofstream::binary);
    outlog << "3" << endl;
    if (os) {
-	   header.command = cix_command::ACK;
-	   os.write(buff, header.nbytes);
+      header.command = cix_command::ACK;
+      os.write(buff, header.nbytes);
    }
    else {
-	   header.command = cix_command::NAK;
+      header.command = cix_command::NAK;
    }
    outlog << "4" << endl;
    send_packet(client_sock, &header, sizeof header);
