@@ -55,6 +55,7 @@ void reply_rm (accepted_socket& client_sock, cix_header& header) {
    }
    else { 
       header.command = cix_command::NAK;
+      header.nbytes = errno;
    }
    send_packet (client_sock, &header, sizeof header);
 }
@@ -70,6 +71,7 @@ void reply_put (accepted_socket& client_sock, cix_header& header) {
    }
    else {
       header.command = cix_command::NAK;
+      header.nbytes = errno;
    }
    send_packet(client_sock, &header, sizeof header);
    os.close();
@@ -92,6 +94,7 @@ void reply_get (accepted_socket& client_sock, cix_header& header) {
    else
    {
       header.command = cix_command::NAK;
+      header.nbytes = errno;
       send_packet (client_sock, &header, sizeof header);
    }
    is.close();
