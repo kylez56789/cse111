@@ -60,14 +60,10 @@ void reply_rm (accepted_socket& client_sock, cix_header& header) {
 }
 
 void reply_put (accepted_socket& client_sock, cix_header& header) {
-   //char buff[header.nbytes + 1];a
-   outlog << "1" << endl;
    char buff[0x1000];
    recv_packet (client_sock, buff, header.nbytes);
-   outlog << "2" << endl;
-   //buff[header.nbytes] = '\0';
+   buff[header.nbytes] = '\0';
    ofstream os(header.filename, ofstream::binary);
-   outlog << "3" << endl;
    if (os) {
       header.command = cix_command::ACK;
       os.write(buff, header.nbytes);
@@ -75,9 +71,7 @@ void reply_put (accepted_socket& client_sock, cix_header& header) {
    else {
       header.command = cix_command::NAK;
    }
-   outlog << "4" << endl;
    send_packet(client_sock, &header, sizeof header);
-   outlog << "5" << endl;
    os.close();
 }
 
@@ -88,7 +82,6 @@ void reply_get (accepted_socket& client_sock, cix_header& header) {
       is.seekg(0, is.end);
       int len = is.tellg();
       is.seekg(0, is.beg);
-      //char buff[len];
       char buff [0x1000];
       is.read(buff, len); 
       header.nbytes = len;
@@ -117,11 +110,6 @@ void run_server (accepted_socket& client_sock) {
                reply_ls (client_sock, header);
                break;
             case cix_command::PUT:
-              //TODO(tystran): Check every character
-              //For each, if character is a / then stop and print error
-              //else Check for null terminator
-              //  if found, then set a null to false
-              //  once determined filename is good
               reply_put (client_sock, header);
               break;
             case cix_command::GET:

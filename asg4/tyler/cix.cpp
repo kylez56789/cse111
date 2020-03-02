@@ -98,13 +98,12 @@ void cix_put (client_socket& server, string file_name) {
    cix_header header;
    header.command = cix_command::PUT;
    if(not valid_filename(file_name)) {
-      cout << "Error: Invalid file name " << file_name << endl;
+      outlog << "Error: Invalid file name " << file_name << endl;
    }
    else {
-      cout << "Valid File Name " << file_name << endl;
       ifstream input(file_name, ifstream::binary);
       if(!input) {
-         outlog << "Error: File not found" << endl;
+         outlog << "Error: File "<< file_name << "not found"<< endl;
       }
       else {
          int size = sizeof(header.filename);
@@ -115,12 +114,9 @@ void cix_put (client_socket& server, string file_name) {
          input.seekg(0, input.beg);
          input.read(buffer, len);
          header.nbytes = len;
-         cout << buffer << endl;//Print statement remove later
-         outlog << "sending header 1" << header << endl;
+         outlog << "sending header " << header << endl;
          send_packet (server, &header, sizeof header);
-         outlog << "sending payload" << endl;
          send_packet (server, buffer, len);
-         outlog << "Finished sending, now receiving" << endl;
          recv_packet (server, &header, sizeof header);
          outlog << "received header " << header << endl;
          if(header.command != cix_command::ACK) {
@@ -130,7 +126,7 @@ void cix_put (client_socket& server, string file_name) {
          else {
             outlog <<" Put command successful" << endl;
          }
-      //input.close();
+      input.close();
       }
    }
 }
@@ -142,7 +138,6 @@ void cix_get (client_socket& server, string file_name) {
       cout << "Error: Invalid file name " << file_name << endl;
    }
    else {
-      cout << "Valid File Name " << file_name << endl;
       int size = sizeof(header.filename);
       strncpy(header.filename, file_name.c_str(), size);
       outlog << "sending header " << header << endl;
@@ -150,7 +145,7 @@ void cix_get (client_socket& server, string file_name) {
       recv_packet (server, &header, sizeof header);
       outlog << "received header " << header << endl;
       if (header.command != cix_command::FILEOUT) {
-         outlog << "sent get, server did not return fileout" << endl;
+         outlog << "sent get, server did not return FILEOUT" << endl;
          outlog << "server returned " << header << endl;
       }else {
          auto buffer = make_unique<char[]> (header.nbytes + 1);
@@ -171,7 +166,6 @@ void cix_rm (client_socket& server, string file_name) {
       cout << "Error: Invalid file name " << file_name << endl;
    }
    else {
-      cout << "Valid File Name " << file_name << endl;
       int size = sizeof(header.filename);
       strncpy(header.filename, file_name.c_str(), size);
       outlog << "sending header " << header << endl;
@@ -220,8 +214,6 @@ int main (int argc, char** argv) {
          string filename;
          if(cmd == cix_command::PUT || cmd == cix_command::GET
             || cmd == cix_command::RM) {
-            //TODO(tystran): add more to this statement rm
-            //Get file name if there, if not error to outlog
             if (words.size() < 2) {
                outlog << words[0] << ":requires filename" << endl;
                continue;
