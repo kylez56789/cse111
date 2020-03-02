@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
 using namespace std;
 
 #include <libgen.h>
@@ -105,13 +106,14 @@ void run_server (accepted_socket& client_sock) {
                reply_ls (client_sock, header);
                break;
             case cix_command::PUT:
-              //TODO(tystran): Check every character
-              //For each, if character is a / then stop and print error
-              //else Check for null terminator
-              //  if found, then set a null to false
-              //  once determined filename is good
-              reply_put (client_sock, header);
-              break;
+               reply_put (client_sock, header);
+               break;
+            case cix_command::GET:
+               reply_get (client_sock, header);
+               break;
+            case cix_command::RM:
+               reply_rm (client_sock, header);
+               break;
             default:
                outlog << "invalid client header:" << header << endl;
                break;
