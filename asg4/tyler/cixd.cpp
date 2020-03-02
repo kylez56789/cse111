@@ -56,7 +56,8 @@ void reply_rm (accepted_socket& client_sock, cix_header& header) {
 }
 
 void reply_put (accepted_socket& client_sock, cix_header& header) {
-   char buff[header.nbytes + 1];
+   //char buff[header.nbytes + 1];
+   char buff[0x1000];
    recv_packet (client_sock, buff, header.nbytes);
    buff[header.nbytes] = '\0';
    ofstream os(header.filename, ofstream::binary);
@@ -78,7 +79,8 @@ void reply_get (accepted_socket& client_sock, cix_header& header) {
       is.seekg(0, is.end);
       int len = is.tellg();
       is.seekg(0, is.beg);
-      char buff[len];
+      //char buff[len];
+      char buff[0x1000];
       is.read(buff, len); 
       header.nbytes = len;
       header.command = cix_command::FILE;
