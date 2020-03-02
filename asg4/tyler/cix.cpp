@@ -104,7 +104,7 @@ void cix_put (client_socket& server, string file_name) {
       cout << "Valid File Name " << file_name << endl;
       ifstream input(file_name, ifstream::binary);
       if(!input) {
-         outlog << "Erroasdasdasdr: File not found" << endl;
+         outlog << "Error: File not found" << endl;
       }
       else {
          int size = sizeof(header.filename);
@@ -114,10 +114,13 @@ void cix_put (client_socket& server, string file_name) {
          int len = input.tellg();
          input.seekg(0, input.beg);
          input.read(buffer, len);
+         header.nbytes = len;
          cout << buffer << endl;//Print statement
-         outlog << "sending header " << header << endl;
+         outlog << "sending header 1" << header << endl;
          send_packet (server, &header, sizeof header);
+         outlog << "sending payload" << endl;
          send_packet (server, buffer, len);
+         outlog << "Finished sending, now receiving" << endl;
          recv_packet (server, &header, sizeof header);
          outlog << "received header " << header << endl;
          if(header.command != cix_command::ACK) {
@@ -127,7 +130,7 @@ void cix_put (client_socket& server, string file_name) {
          else {
             outlog <<" Put command successful" << endl;
          }
-      input.close();
+      //input.close();
       }
    }
 }

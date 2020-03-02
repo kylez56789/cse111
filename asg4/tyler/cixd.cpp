@@ -60,11 +60,14 @@ void reply_rm (accepted_socket& client_sock, cix_header& header) {
 }
 
 void reply_put (accepted_socket& client_sock, cix_header& header) {
-   //char buff[header.nbytes + 1];
+   //char buff[header.nbytes + 1];a
+   outlog << "1" << endl;
    char buff[0x1000];
    recv_packet (client_sock, buff, header.nbytes);
+   outlog << "2" << endl;
    buff[header.nbytes] = '\0';
    ofstream os(header.filename, ofstream::binary);
+   outlog << "3" << endl;
    if (os) {
 	   header.command = cix_command::ACK;
 	   os.write(buff, header.nbytes);
@@ -72,7 +75,9 @@ void reply_put (accepted_socket& client_sock, cix_header& header) {
    else {
 	   header.command = cix_command::NAK;
    }
+   outlog << "4" << endl;
    send_packet(client_sock, &header, sizeof header);
+   outlog << "5" << endl;
    os.close();
 }
 
