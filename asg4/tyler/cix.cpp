@@ -102,9 +102,9 @@ void cix_put (client_socket& server, string file_name) {
    }
    else {
       cout << "Valid File Name " << file_name << endl;
-      ifstream input(file_name, ios::binary);
+      ifstream input(file_name, ifstream::binary);
       if(!input) {
-         outlog << "Error: File not found" << endl;
+         outlog << "Erroasdasdasdr: File not found" << endl;
       }
       else {
          int size = sizeof(header.filename);
@@ -147,7 +147,7 @@ void cix_get (client_socket& server, string file_name) {
       recv_packet (server, &header, sizeof header);
       outlog << "received header " << header << endl;
       if (header.command != cix_command::FILEOUT) {
-         outlog << "sent LS, server did not return LSOUT" << endl;
+         outlog << "sent get, server did not return fileout" << endl;
          outlog << "server returned " << header << endl;
       }else {
          auto buffer = make_unique<char[]> (header.nbytes + 1);
@@ -244,10 +244,10 @@ int main (int argc, char** argv) {
                cix_put (server, filename);
                break;
             case cix_command::GET:
-              cix_put (server, filename);
+              cix_get (server, filename);
               break;
             case cix_command::RM:
-              cix_put (server, filename);
+              cix_rm (server, filename);
               break;
             default:
                outlog << words[0] << ": invalid command" << endl;

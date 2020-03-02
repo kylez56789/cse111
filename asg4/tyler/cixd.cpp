@@ -50,8 +50,12 @@ void reply_ls (accepted_socket& client_sock, cix_header& header) {
 
 void reply_rm (accepted_socket& client_sock, cix_header& header) {
    bool unlinked = unlink(header.filename);
-   if (unlinked == true) header.command = cix_command::ACK;
-   else header.command = cix_command::NAK;
+   if (unlinked == 0) {
+      header.command = cix_command::ACK;
+   }
+   else { 
+      header.command = cix_command::NAK;
+   }
    send_packet (client_sock, &header, sizeof header);
 }
 
@@ -80,12 +84,12 @@ void reply_get (accepted_socket& client_sock, cix_header& header) {
       int len = is.tellg();
       is.seekg(0, is.beg);
       //char buff[len];
-      char buff[0x1000];
+      char buff [0x1000];
       is.read(buff, len); 
       header.nbytes = len;
-      header.command = cix_command::FILE;
+      header.command = cix_command::FILEOUT;
       send_packet (client_sock, &header, sizeof header);
-      send_packet (client_sock, buffer, len);
+      send_packet (client_sock, buff, len);
       }
    else
    {
@@ -108,8 +112,13 @@ void run_server (accepted_socket& client_sock) {
                reply_ls (client_sock, header);
                break;
             case cix_command::PUT:
-               reply_put (client_sock, header);
-               break;
+              //TODO(tystran): Check every character
+              //For each, if character is a / then stop and print error
+              //else Check for null terminator
+              //  if found, then set a null to false
+              //  once determined filename is good
+              reply_put (client_sock, header);
+              break;
             case cix_command::GET:
                reply_get (client_sock, header);
                break;
