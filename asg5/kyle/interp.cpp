@@ -42,7 +42,7 @@ interpreter::factory_map {
 };
 
 interpreter::shape_map interpreter::objmap;
-static rgbcolor border_color;
+static rgbcolor color_border;
 
 interpreter::~interpreter() {
    for (const auto& itor: objmap) {
@@ -61,13 +61,13 @@ void interpreter::interpret (const parameters& params) {
    func (++begin, params.cend());
 	   if (command == "moveby") {
       ++begin;
-      window::pixels_to_move_by = std::strtof((*begin).c_str(), 0);
+      window::pixels_to_move_by = strtof((*begin).c_str(), 0);
       return;
    }  
    if (command == "border") {
       rgbcolor new_color {begin[1]};
 		window_dimensions::border_color = new_color;
-		window::border_width = std::strtof((begin[2]).c_str(), 0);
+		window::border_width = strtof((begin[2]).c_str(), 0);
       return;
    }  
 }
