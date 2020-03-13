@@ -142,8 +142,15 @@ shape_ptr interpreter::make_diamond(param begin, param end) {
 
 shape_ptr interpreter::make_triangle(param begin, param end) {
 	DEBUGF ('f', range (begin, end));
-   GLfloat width = strtof((*begin).c_str(), 0);
-   return make_shared<triangle>(width);
+   vertex_list vertexes;
+   Glfloat xcoord;
+   Glfloat ycoord;
+   while (begin != end) {
+      xcoord = strtof((*begin++).c_str(), 0);
+      ycoord = strtof((*begin++).c_str(), 0);
+      vertexes.push_back({xcoord, ycoord});
+   }
+   return make_shared<triangle>(vertexes);
 }
 
 shape_ptr interpreter::make_equilateral(param begin, param end) {
